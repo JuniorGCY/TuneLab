@@ -6,11 +6,12 @@ import { Link } from "expo-router";
 import { useAuth } from '../../contexts/AuthContext';
 import { getFirebaseErrorMessage } from "@/utils/FirebaseErrors";
 
+//imports externos
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-
-import { User, Mail, LockKeyhole} from 'lucide-react-native'
+import { User, Mail, LockKeyhole, Eye, EyeOff } from 'lucide-react-native'
+import { RFValue } from 'react-native-responsive-fontsize';
 
 const registerSchema = z.object({
     name: z.string().min(2, 'O nome deve ter pelo menos 2 caracteres.'),
@@ -27,6 +28,8 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 export default function RegisterScreen() {
     const [isRegistering, setIsRegistering] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const { register } = useAuth();
 
     const { control, handleSubmit, formState: { errors } } = useForm<RegisterFormData>({
@@ -109,16 +112,26 @@ export default function RegisterScreen() {
                         <View style={styles.inputfieldContainer}>
                             <LockKeyhole color="#666" size={20} style={styles.inputIcon} />
                             <TextInput
-                            style={styles.inputfield}
-                            placeholder="Digite sua senha"
-                            placeholderTextColor="#666"
-                            value={value}
-                            onBlur={onBlur}
-                            onChangeText={onChange}
-                            secureTextEntry
-                        />
+                                style={styles.inputfield}
+                                placeholder="Digite sua senha"
+                                placeholderTextColor="#666"
+                                value={value}
+                                onBlur={onBlur}
+                                onChangeText={onChange}
+                                secureTextEntry={!showPassword}
+                            />
+                            <TouchableOpacity 
+                                onPress={() => setShowPassword(!showPassword)}
+                                style={{ padding: 4 }}
+                            >
+                                {showPassword ? (
+                                    <EyeOff color="#666" size={20} />
+                                ) : (
+                                    <Eye color="#666" size={20} />
+                                )}
+                            </TouchableOpacity>
                         </View>
-                       
+                        
                     )}
                 />
                 {errors.password && <Text style={styles.errorText}>{errors.password.message}</Text>}
@@ -130,20 +143,30 @@ export default function RegisterScreen() {
                         <View style={styles.inputfieldContainer}> 
                             <LockKeyhole color="#666" size={20} style={styles.inputIcon} />
                             <TextInput
-                            style={styles.inputfield}
-                            placeholder="Confirme sua senha"
-                            placeholderTextColor="#666"
-                            value={value}
-                            onBlur={onBlur}
-                            onChangeText={onChange}
-                            secureTextEntry
-                        />
+                                style={styles.inputfield}
+                                placeholder="Confirme sua senha"
+                                placeholderTextColor="#666"
+                                value={value}
+                                onBlur={onBlur}
+                                onChangeText={onChange}
+                                secureTextEntry={!showConfirmPassword}
+                            />
+                            <TouchableOpacity 
+                                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                                style={{ padding: 4 }}
+                            >
+                                {showConfirmPassword ? (
+                                    <EyeOff color="#666" size={20} />
+                                ) : (
+                                    <Eye color="#666" size={20} />
+                                )}
+                            </TouchableOpacity>
                         </View>
                     )}
                 />
                 {errors.confirmPassword && <Text style={styles.errorText}>{errors.confirmPassword.message}</Text>}
 
-                <Text style={{color: '#FFF', margin: 10, fontSize: 12, textAlign: 'center'}}>
+                <Text style={{color: '#FFF', margin: 10, fontSize: 12, textAlign: 'center', fontFamily: FONTS.Montserrat.light}}>
                     Ao se cadastrar, você aceita nossos termos e condições.
                 </Text>
 
@@ -155,7 +178,7 @@ export default function RegisterScreen() {
                     {isRegistering ? (
                         <ActivityIndicator color="#FFF" />
                     ) : (
-                        <Text style={{color: '#FFF', textAlign: 'center', fontWeight: 'bold'}}>Cadastrar</Text>
+                        <Text style={styles.buttonText}>Cadastrar</Text>
                     )}
                 </TouchableOpacity>
             </View>
@@ -167,10 +190,10 @@ export default function RegisterScreen() {
             ) : null}
 
             <View style={{flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}>
-                <Text style={{color: '#FFF', margin: 10}}>Já tem uma conta?</Text>
+                <Text style={styles.bottomText}>Já tem uma conta?</Text>
                 <Link href="/(auth)/login" asChild>
                     <TouchableOpacity>
-                        <Text style={{color: colors.primary, margin: 10, textDecorationLine: 'underline'}}>Faça login!</Text>
+                        <Text style={styles.bottomText2}>Faça login!</Text>
                     </TouchableOpacity>
                 </Link>
             </View>
@@ -186,12 +209,12 @@ const styles = StyleSheet.create({
         alignItems: 'center'
     },
     title: {
-        fontSize: 30,
+        fontSize: RFValue(24),
         color: colors.primary,
         fontFamily: FONTS.Montserrat.extraBold
     },
     subTitle: {
-        fontSize: 16,
+        fontSize: RFValue(12),
         color: '#FFF',
         fontFamily: FONTS.Montserrat.bold,
         textAlign: 'center',
@@ -231,7 +254,7 @@ const styles = StyleSheet.create({
     },
     errorText: {
         color: '#ff4d4d',
-        fontSize: 11,
+        fontSize: RFValue(11),
         alignSelf: 'flex-start',
         marginLeft: 15,
         marginBottom: 4,
@@ -243,5 +266,23 @@ const styles = StyleSheet.create({
         marginVertical: 10,
         borderRadius: 12, 
         backgroundColor: colors.primary, 
+    },
+    buttonText: {
+        fontSize: RFValue(12),
+        color: '#FFF', 
+        textAlign: 'center',
+        fontFamily: FONTS.Montserrat.bold
+    },
+    bottomText: {
+        fontSize: RFValue(12),
+        fontFamily: FONTS.Montserrat.light,
+        color: '#FFF', 
+        margin: 10
+    },
+    bottomText2: {
+        fontSize: RFValue(12),
+        fontFamily: FONTS.Montserrat.regular,
+        color: colors.primary, 
+        margin: 10   
     }
 });

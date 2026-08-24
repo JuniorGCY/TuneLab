@@ -2,6 +2,18 @@ import { Stack, useRouter, useSegments } from 'expo-router';
 import { AuthProvider, useAuth } from '../contexts/AuthContext';
 import { useEffect } from 'react';
 import { View, ActivityIndicator } from 'react-native';
+import * as SplashScreen from 'expo-splash-screen';
+
+import { 
+  useFonts, 
+  Montserrat_300Light, 
+  Montserrat_400Regular, 
+  Montserrat_500Medium, 
+  Montserrat_700Bold, 
+  Montserrat_900Black 
+} from '@expo-google-fonts/montserrat';
+
+SplashScreen.preventAutoHideAsync();
 
 function RootLayoutNav() {
   const { user, isLoading } = useAuth();
@@ -37,6 +49,25 @@ function RootLayoutNav() {
 }
 
 export default function RootLayout() {
+  const [fontsLoaded, fontError] = useFonts({
+    Montserrat_300Light,
+    Montserrat_400Regular,
+    Montserrat_500Medium,
+    Montserrat_700Bold,
+    Montserrat_900Black,
+  });
+
+  useEffect(() => {
+    if (fontsLoaded || fontError) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded, fontError]);
+
+
+  if (!fontsLoaded && !fontError) {
+    return null;
+  }
+
   return (
     <AuthProvider>
       <RootLayoutNav />

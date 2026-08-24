@@ -1,14 +1,17 @@
 import { useState } from "react";
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator } from "react-native";
 import { colors } from "@/constants/colors";
-import { Fonts } from "@/constants/theme";
+import { FONTS } from "@/constants/fonts";
 import { Link } from "expo-router";
+
+//imports externos
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-
 import { useAuth } from '../../contexts/AuthContext';
 import { getFirebaseErrorMessage } from "@/utils/FirebaseErrors";
+import { Mail, LockKeyhole, Eye, EyeOff } from 'lucide-react-native';
+import { RFValue } from 'react-native-responsive-fontsize';
 
 const loginSchema = z.object({
     email: z.string().email('Digite um e-mail válido.'),
@@ -20,6 +23,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 export default function LoginScreen() {
     const [isLoggingIn, setIsLoggingIn] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const { login } = useAuth();
 
     const { control, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
@@ -56,16 +60,19 @@ export default function LoginScreen() {
                     control={control}
                     name="email"
                     render={({ field: { onChange, onBlur, value } }) => (
-                        <TextInput
-                            style={styles.inputfield}
-                            placeholder="Digite seu email"
-                            placeholderTextColor="#666"
-                            value={value}
-                            onBlur={onBlur}
-                            onChangeText={onChange}
-                            keyboardType="email-address"
-                            autoCapitalize="none"
-                        />
+                        <View style={styles.inputfieldContainer}>
+                            <Mail color="#666" size={20} style={styles.inputIcon} />
+                            <TextInput
+                                style={styles.inputfield}
+                                placeholder="Digite seu email"
+                                placeholderTextColor="#666"
+                                value={value}
+                                onBlur={onBlur}
+                                onChangeText={onChange}
+                                keyboardType="email-address"
+                                autoCapitalize="none"
+                            />
+                        </View>
                     )}
                 />
                 {errors.email && <Text style={styles.errorText}>{errors.email.message}</Text>}
@@ -74,22 +81,37 @@ export default function LoginScreen() {
                     control={control}
                     name="password"
                     render={({ field: { onChange, onBlur, value } }) => (
-                        <TextInput
-                            style={styles.inputfield}
-                            placeholder="Digite sua senha"
-                            placeholderTextColor="#666"
-                            value={value}
-                            onBlur={onBlur}
-                            onChangeText={onChange}
-                            secureTextEntry
-                        />
+                        <View style={styles.inputfieldContainer}>
+                            <LockKeyhole color="#666" size={20} style={styles.inputIcon} />
+                            <TextInput
+                                style={styles.inputfield}
+                                placeholder="Digite sua senha"
+                                placeholderTextColor="#666"
+                                value={value}
+                                onBlur={onBlur}
+                                onChangeText={onChange}
+                                secureTextEntry={!showPassword}
+                            />
+                            <TouchableOpacity 
+                                onPress={() => setShowPassword(!showPassword)}
+                                style={{ padding: 4 }}
+                            >
+                                {showPassword ? (
+                                    <EyeOff color="#666" size={20} />
+                                ) : (
+                                    <Eye color="#666" size={20} />
+                                )}
+                            </TouchableOpacity>
+                        </View>
                     )}
                 />
                 {errors.password && <Text style={styles.errorText}>{errors.password.message}</Text>}
 
-                <Text style={{color: '#FFF', alignSelf: 'flex-end', margin: 10, fontSize: 12}}>
-                    Esqueceu a senha?
-                </Text>
+                <TouchableOpacity>
+                    <Text style={{color: '#FFF', alignSelf: 'flex-end', margin: 10, fontSize: RFValue(11), fontFamily: FONTS.Montserrat.regular}}>
+                        Esqueceu a senha?
+                    </Text>
+                </TouchableOpacity>
 
                 <TouchableOpacity 
                     style={styles.button} 
@@ -99,7 +121,7 @@ export default function LoginScreen() {
                     {isLoggingIn ? (
                         <ActivityIndicator color="#FFF" />
                     ) : (
-                        <Text style={{color: '#FFF', textAlign: 'center', fontWeight: 'bold'}}>Entrar</Text>
+                        <Text style={styles.buttonText}>Entrar</Text>
                     )}
                 </TouchableOpacity>
             </View>
@@ -111,11 +133,11 @@ export default function LoginScreen() {
             ) : null}
 
             <View style={{flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}>
-                <Text style={{color: '#FFF', margin: 10}}>Não tem conta?</Text>
+                <Text style={styles.bottomText}>Não tem conta?</Text>
 
                 <Link href="/(auth)/register" asChild>
                     <TouchableOpacity>
-                        <Text style={{color: colors.primary, margin: 10, textDecorationLine: 'underline'}}>Crie uma!</Text>
+                        <Text style={styles.bottomText2}>Crie uma!</Text>
                     </TouchableOpacity>
                 </Link>
             </View>
@@ -131,15 +153,15 @@ const styles = StyleSheet.create({
         alignItems: 'center'
     },
     title: {
-        fontSize: 35,
+        fontSize: RFValue(35),
         color: colors.primary,
-        fontFamily: Fonts.serif,
+        fontFamily: FONTS.Montserrat.extraBold,
         marginBottom: 5
     },
     subTitle: {
-        fontSize: 20,
+        fontSize: RFValue(16),
         color: '#FFF',
-        fontFamily: Fonts.sans
+        fontFamily: FONTS.Montserrat.medium
     },
     mainCard: {
         backgroundColor: '#1C1C1E',
@@ -150,23 +172,36 @@ const styles = StyleSheet.create({
         padding: 15,
         borderRadius: 12,
     },
-    inputfield: {
+    inputfieldContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
         width: '100%',
         maxWidth: 280,
         marginVertical: 6,
-        padding: 12,
-        color: '#fff',
+        paddingHorizontal: 12,
         borderWidth: 0.5,
         borderColor: colors.border,
         borderRadius: 12,
         backgroundColor: '#0F0F0F',
+        height: 48,
+    },
+    inputIcon: {
+        marginRight: 8,
+    },
+    inputfield: {
+        flex: 1,
+        height: '100%',
+        color: '#fff',
+        paddingVertical: 0,
+        fontFamily: FONTS.Montserrat.regular
     },
     errorText: {
         color: '#ff4d4d',
-        fontSize: 11,
+        fontSize: RFValue(11),
         alignSelf: 'flex-start',
         marginLeft: 15,
         marginBottom: 4,
+        fontFamily: FONTS.Montserrat.regular
     },
     button: {
         width: 280,
@@ -174,5 +209,23 @@ const styles = StyleSheet.create({
         marginVertical: 10,
         borderRadius: 12, 
         backgroundColor: colors.primary, 
+    },
+    buttonText: {
+        fontSize: RFValue(12),
+        color: '#FFF', 
+        textAlign: 'center',
+        fontFamily: FONTS.Montserrat.bold
+    },
+    bottomText: {
+        fontSize: RFValue(12),
+        fontFamily: FONTS.Montserrat.light,
+        color: '#FFF', 
+        margin: 10
+    },
+    bottomText2: {
+        fontSize: RFValue(12),
+        fontFamily: FONTS.Montserrat.regular,
+        color: colors.primary, 
+        margin: 10   
     }
-})
+});
