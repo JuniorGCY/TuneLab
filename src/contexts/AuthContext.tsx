@@ -5,6 +5,7 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut,
+  updateProfile,
   type User,
 } from '@react-native-firebase/auth';
 
@@ -13,7 +14,7 @@ interface AuthContextData {
   isLoading: boolean;
   getToken: () => Promise<string | null>;
   login: (email: string, pass: string) => Promise<void>;
-  register: (email: string, pass: string) => Promise<void>;
+  register: (email: string, pass: string, name?: string) => Promise<void>; // Aceita o nome opcionalmente
   logout: () => Promise<void>;
 }
 
@@ -45,8 +46,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await signInWithEmailAndPassword(getAuth(), email, pass);
   };
 
-  const register = async (email: string, pass: string) => {
-    await createUserWithEmailAndPassword(getAuth(), email, pass);
+  const register = async (email: string, pass: string, name?: string) => {
+    const userCredential = await createUserWithEmailAndPassword(getAuth(), email, pass);
+    
+    if (name && userCredential.user) {
+      await updateProfile(userCredential.user,{
+        displayName: name,
+      });
+    }
   };
 
   const logout = async () => {
