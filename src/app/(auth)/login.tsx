@@ -1,15 +1,28 @@
-import { View, Text, StyleSheet, TextInput, TouchableOpacity} from "react-native";
+import { useState } from "react";
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator } from "react-native";
 import { colors } from "@/constants/colors";
 import { Fonts } from "@/constants/theme";
-
 import { Link } from "expo-router";
-import { router } from "expo-router";
 
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function LoginScreen() {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [isLoggingIn, setIsLoggingIn] = useState(false);
+    const { login } = useAuth();
+    
+    const handleLogin = async () => {
+        if (!email || !password) return;
 
-    const goAuth = () => {
-        router.replace('/(tabs)')
+        try {
+            setIsLoggingIn(true);
+            await login(email, password);
+        } catch (error: any) {
+            console.log('Erro ao logar:', error.message);
+        } finally {
+            setIsLoggingIn(false);
+        }
     }
 
     return (
@@ -22,8 +35,13 @@ export default function LoginScreen() {
             <View style={styles.mainCard}>
                 <View>
                     <TextInput
-                       style={styles.inputfield}
-                       placeholder="Digite seu email"
+                        style={styles.inputfield}
+                        placeholder="Digite seu email"
+                        placeholderTextColor="#666"
+                        value={email}
+                        onChangeText={setEmail}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
                     />
                 </View>
 
@@ -31,32 +49,38 @@ export default function LoginScreen() {
                    <TextInput
                        style={styles.inputfield}
                        placeholder="Digite sua senha"
-                       keyboardType="numeric"
+                       placeholderTextColor="#666"
+                       value={password}
+                       onChangeText={setPassword}
+                       secureTextEntry
                     /> 
                 </View>
 
                 <Text style={{color: '#FFF', alignSelf: 'flex-end', margin: 10}}>Esqueceu a senha?</Text>
 
                 <View>
-                    <TouchableOpacity style={styles.button}>
-                        <Text style={{color: '#FFF', textAlign: 'center'}}>Cadastrar</Text>
+                    <TouchableOpacity 
+                        style={styles.button} 
+                        onPress={handleLogin}
+                        disabled={isLoggingIn}
+                    >
+                        {isLoggingIn ? (
+                            <ActivityIndicator color="#FFF" />
+                        ) : (
+                            <Text style={{color: '#FFF', textAlign: 'center'}}>Entrar</Text>
+                        )}
                     </TouchableOpacity>
                 </View>
             </View>
 
             <View style={{flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}>
-                <Text style={{color: '#FFF', margin: 10}}>Nao tem conta?</Text>
-                <Link href="/register">
-                    <Text style={{color: '#FFF', margin: 10, textDecorationLine: 'underline'}}>Crie uma!</Text>
+                <Text style={{color: '#FFF', margin: 10}}>Não tem conta?</Text>
+                <Link href="/register" asChild>
+                    <TouchableOpacity>
+                        <Text style={{color: '#FFF', margin: 10, textDecorationLine: 'underline'}}>Crie uma!</Text>
+                    </TouchableOpacity>
                 </Link>
-
-                <TouchableOpacity onPress={goAuth}>
-                    <Text style={{color: '#FFF', margin: 10}}>Ir para tela Home</Text>
-                </TouchableOpacity>
             </View>
-
-            
-            
         </View>
     )
 }

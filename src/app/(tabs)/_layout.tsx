@@ -8,7 +8,7 @@ export default function TabsLayout() {
             <Tabs.Screen 
                name="index"
                options={{
-                title: 'TuneLab'
+                title: 'Home'
                }}/>
 
         </Tabs>
