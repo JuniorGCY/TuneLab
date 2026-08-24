@@ -6,10 +6,6 @@ import CardSuggestionsUser from "@/features/Home/components/CardSuggestionsUser"
 import { colors } from "@/constants/colors";
 
 export default function HomeScreen() {
-    const goBack = () => {
-        router.replace('/(auth)/login')
-    }
-
     const { width } = Dimensions.get('window');
     const CARD_WIDTH = width * 0.20;
 
@@ -52,12 +48,6 @@ export default function HomeScreen() {
                     snapToInterval={CARD_WIDTH + 16}
                 />
             </View>
-
-            
-
-             <TouchableOpacity onPress={goBack}>
-                    <Text style={{color: '#FFF', margin: 10}}>Ir para tela Login</Text>
-            </TouchableOpacity>
 
             <View style={styles.flatListViewSuggestions}>
                 <Text style={styles.textsPrimary}>Sugestoes para voce</Text>

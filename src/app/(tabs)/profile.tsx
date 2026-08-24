@@ -2,10 +2,23 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import { Fonts } from '@/constants/theme';
 
+import { useAuth } from '../../contexts/AuthContext';
+
+
 const { width } = Dimensions.get('window')
 const card_width = width * 0.40
 
 export default function ProfileScreen() {
+    const handleLogout = async () => {
+        try {
+            await logout()
+        } catch (error: any) {
+            console.log("Erro ao deslogarL", error)
+        }
+    }
+
+    const { logout } = useAuth()
+
     return (
         <View style={styles.container}>
             <View style={styles.headerView}>
@@ -49,6 +62,14 @@ export default function ProfileScreen() {
                 <View style={styles.cardBottom}>
                     <Text style={styles.cardBottomText}>Termos e privacidade</Text>
                 </View>
+
+                <TouchableOpacity onPress={handleLogout}>
+                    <View style={styles.cardBottom}>
+                       <Text style={styles.cardBottomText}>Sair</Text>
+                    </View>
+                </TouchableOpacity>
+
+                
             </View>
         </View>
     )
