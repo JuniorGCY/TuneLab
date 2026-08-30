@@ -1,62 +1,60 @@
 import { useState } from "react";
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator } from "react-native";
 import { colors } from "@/constants/colors";
-import { Fonts } from "@/constants/theme";
+import { FONTS } from "@/constants/fonts";
 import { Link } from "expo-router";
-
 import { useAuth } from '../../contexts/AuthContext';
-import { getAuth, updateProfile } from '@react-native-firebase/auth'; 
+import { getFirebaseErrorMessage } from "@/utils/FirebaseErrors";
+
+//imports externos
+import { useForm, Controller } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { User, Mail, LockKeyhole, Eye, EyeOff } from 'lucide-react-native'
+import { RFValue } from 'react-native-responsive-fontsize';
+
+const registerSchema = z.object({
+    name: z.string().min(2, 'O nome deve ter pelo menos 2 caracteres.'),
+    email: z.string().email('Digite um e-mail válido.'),
+    password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres.'),
+    confirmPassword: z.string()
+}).refine((data) => data.password === data.confirmPassword, {
+    message: 'As senhas não coincidem.',
+    path: ['confirmPassword'],
+});
+
+type RegisterFormData = z.infer<typeof registerSchema>;
 
 export default function RegisterScreen() {
-    const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
     const [isRegistering, setIsRegistering] = useState(false);
-    
+    const [errorMessage, setErrorMessage] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const { register } = useAuth();
 
-    const handleRegister = async () => {
-        if (!name || !email || !password || !confirmPassword) {
-            Alert.alert('Erro', 'Por favor, preencha todos os campos.');
-            return;
+    const { control, handleSubmit, formState: { errors } } = useForm<RegisterFormData>({
+        resolver: zodResolver(registerSchema),
+        defaultValues: {
+            name: '',
+            email: '',
+            password: '',
+            confirmPassword: ''
         }
+    });
 
-        if (password !== confirmPassword) {
-            Alert.alert('Erro', 'As senhas não coincidem.');
-            return;
-        }
-
-        if (password.length < 6) {
-            Alert.alert('Erro', 'A senha deve ter pelo menos 6 caracteres.');
-            return;
-        }
+    const onSubmit = async (data: RegisterFormData) => {
+        setErrorMessage('');
 
         try {
             setIsRegistering(true);
-            
-            await register(email, password);
-            const authInstance = getAuth();
-            
-            if (authInstance.currentUser) {
-                await updateProfile(authInstance.currentUser, {
-                    displayName: name,
-                });
-            }
-            
+            await register(data.email, data.password, data.name);
         } catch (error: any) {
-            console.log('Erro ao registrar:', error.message);
-            if (error.code === 'auth/email-already-in-use') {
-                Alert.alert('Erro', 'Este e-mail já está em uso.');
-            } else if (error.code === 'auth/invalid-email') {
-                Alert.alert('Erro', 'E-mail inválido.');
-            } else {
-                Alert.alert('Erro', 'Não foi possível criar a conta. Tente novamente.');
-            }
+            const errorMsg = getFirebaseErrorMessage(error.code);
+            setErrorMessage(errorMsg);
         } finally {
             setIsRegistering(false);
         }
-    }
+    };
 
     return (
         <View style={styles.container}>
@@ -66,72 +64,141 @@ export default function RegisterScreen() {
             </View>
 
             <View style={styles.mainCard}>
-                <TextInput
-                    style={styles.inputfield}
-                    placeholder="Seu nome"
-                    placeholderTextColor="#666"
-                    value={name}
-                    onChangeText={setName}
-                    autoCapitalize="words"
+                <Controller
+                    control={control}
+                    name="name"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                        <View style={styles.inputfieldContainer}>
+                            <User color="#666" size={20} style={styles.inputIcon} />
+                            <TextInput
+                                style={styles.inputfield}
+                                placeholder="Seu nome"
+                                placeholderTextColor="#666"
+                                value={value}
+                                onBlur={onBlur}
+                                onChangeText={onChange}
+                                autoCapitalize="words"
+                            />
+                        </View>
+                    )}
                 />
+                {errors.name && <Text style={styles.errorText}>{errors.name.message}</Text>}
 
-                <TextInput
-                    style={styles.inputfield}
-                    placeholder="seu@email.com"
-                    placeholderTextColor="#666"
-                    value={email}
-                    onChangeText={setEmail}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
+                <Controller
+                    control={control}
+                    name="email"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                        <View style={styles.inputfieldContainer}>
+                            <Mail color="#666" size={20} style={styles.inputIcon} />
+                            <TextInput
+                            style={styles.inputfield}
+                            placeholder="seu@email.com"
+                            placeholderTextColor="#666"
+                            value={value}
+                            onBlur={onBlur}
+                            onChangeText={onChange}
+                            keyboardType="email-address"
+                            autoCapitalize="none"
+                        />
+                        </View>
+                    )}
                 />
+                {errors.email && <Text style={styles.errorText}>{errors.email.message}</Text>}
 
-                <TextInput
-                    style={styles.inputfield}
-                    placeholder="Digite sua senha"
-                    placeholderTextColor="#666"
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry
-                /> 
+                <Controller
+                    control={control}
+                    name="password"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                        <View style={styles.inputfieldContainer}>
+                            <LockKeyhole color="#666" size={20} style={styles.inputIcon} />
+                            <TextInput
+                                style={styles.inputfield}
+                                placeholder="Digite sua senha"
+                                placeholderTextColor="#666"
+                                value={value}
+                                onBlur={onBlur}
+                                onChangeText={onChange}
+                                secureTextEntry={!showPassword}
+                            />
+                            <TouchableOpacity 
+                                onPress={() => setShowPassword(!showPassword)}
+                                style={{ padding: 4 }}
+                            >
+                                {showPassword ? (
+                                    <EyeOff color="#666" size={20} />
+                                ) : (
+                                    <Eye color="#666" size={20} />
+                                )}
+                            </TouchableOpacity>
+                        </View>
+                        
+                    )}
+                />
+                {errors.password && <Text style={styles.errorText}>{errors.password.message}</Text>}
 
-                <TextInput
-                    style={styles.inputfield}
-                    placeholder="Confirme sua senha"
-                    placeholderTextColor="#666"
-                    value={confirmPassword}
-                    onChangeText={setConfirmPassword}
-                    secureTextEntry
-                /> 
+                <Controller
+                    control={control}
+                    name="confirmPassword"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                        <View style={styles.inputfieldContainer}> 
+                            <LockKeyhole color="#666" size={20} style={styles.inputIcon} />
+                            <TextInput
+                                style={styles.inputfield}
+                                placeholder="Confirme sua senha"
+                                placeholderTextColor="#666"
+                                value={value}
+                                onBlur={onBlur}
+                                onChangeText={onChange}
+                                secureTextEntry={!showConfirmPassword}
+                            />
+                            <TouchableOpacity 
+                                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                                style={{ padding: 4 }}
+                            >
+                                {showConfirmPassword ? (
+                                    <EyeOff color="#666" size={20} />
+                                ) : (
+                                    <Eye color="#666" size={20} />
+                                )}
+                            </TouchableOpacity>
+                        </View>
+                    )}
+                />
+                {errors.confirmPassword && <Text style={styles.errorText}>{errors.confirmPassword.message}</Text>}
 
-                <Text style={{color: '#FFF', margin: 10, fontSize: 12, textAlign: 'center'}}>
+                <Text style={{color: '#FFF', margin: 10, fontSize: 12, textAlign: 'center', fontFamily: FONTS.Montserrat.light}}>
                     Ao se cadastrar, você aceita nossos termos e condições.
                 </Text>
 
-                <View>
-                    <TouchableOpacity 
-                        style={styles.button}
-                        onPress={handleRegister}
-                        disabled={isRegistering}
-                    >
-                        {isRegistering ? (
-                            <ActivityIndicator color="#FFF" />
-                        ) : (
-                            <Text style={{color: '#FFF', textAlign: 'center'}}>Cadastrar</Text>
-                        )}
-                    </TouchableOpacity>
-                </View>
+                <TouchableOpacity 
+                    style={styles.button}
+                    onPress={handleSubmit(onSubmit)}
+                    disabled={isRegistering}
+                >
+                    {isRegistering ? (
+                        <ActivityIndicator color="#FFF" />
+                    ) : (
+                        <Text style={styles.buttonText}>Cadastrar</Text>
+                    )}
+                </TouchableOpacity>
             </View>
 
+            {errorMessage ? (
+                <View className="bg-red-500/20 border border-red-500 p-3 rounded-lg mb-4 w-4/5">
+                   <Text className="text-red-400 text-sm text-center">{errorMessage}</Text>
+                </View>
+            ) : null}
+
             <View style={{flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}>
-                <Text style={{color: '#FFF', margin: 10}}>Já tem uma conta?</Text>
+                <Text style={styles.bottomText}>Já tem uma conta?</Text>
                 <Link href="/(auth)/login" asChild>
                     <TouchableOpacity>
-                        <Text style={{color: '#FFF', margin: 10, textDecorationLine: 'underline'}}>Faça login!</Text>
+                        <Text style={styles.bottomText2}>Faça login!</Text>
                     </TouchableOpacity>
                 </Link>
             </View>
         </View>
-    )
+    );
 }
 
 const styles = StyleSheet.create({
@@ -142,41 +209,80 @@ const styles = StyleSheet.create({
         alignItems: 'center'
     },
     title: {
-        fontSize: 30,
+        fontSize: RFValue(24),
         color: colors.primary,
-        fontFamily: Fonts.serif
+        fontFamily: FONTS.Montserrat.extraBold
     },
     subTitle: {
-        fontSize: 20,
+        fontSize: RFValue(12),
         color: '#FFF',
-        fontFamily: Fonts.sans,
+        fontFamily: FONTS.Montserrat.bold,
         textAlign: 'center',
-        marginHorizontal: 20
+        marginHorizontal: 20,
+        marginTop: 5
     },
     mainCard: {
         backgroundColor: '#1C1C1E',
         justifyContent: 'center', 
         alignItems: 'center',
-        width: '80%',
+        width: '85%',
         margin: 20,
-        padding: 10,
+        padding: 15,
         borderRadius: 12,
     },
-    inputfield: {
-        width: 250,
-        marginVertical: 10,
-        padding: 10,
-        color: '#fff',
+    inputfieldContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        width: '100%',
+        maxWidth: 280,
+        marginVertical: 6,
+        paddingHorizontal: 12,
         borderWidth: 0.5,
         borderColor: colors.border,
         borderRadius: 12,
         backgroundColor: '#0F0F0F',
+        height: 48,
+    },
+    inputIcon: {
+        marginRight: 8,
+    },
+    inputfield: {
+        flex: 1,
+        height: '100%',
+        color: '#fff',
+        paddingVertical: 0,
+    },
+    errorText: {
+        color: '#ff4d4d',
+        fontSize: RFValue(11),
+        alignSelf: 'flex-start',
+        marginLeft: 15,
+        marginBottom: 4,
+        fontFamily: FONTS.Montserrat.regular
     },
     button: {
-        width: 250,
+        width: 280,
         padding: 15, 
         marginVertical: 10,
         borderRadius: 12, 
         backgroundColor: colors.primary, 
+    },
+    buttonText: {
+        fontSize: RFValue(12),
+        color: '#FFF', 
+        textAlign: 'center',
+        fontFamily: FONTS.Montserrat.bold
+    },
+    bottomText: {
+        fontSize: RFValue(12),
+        fontFamily: FONTS.Montserrat.light,
+        color: '#FFF', 
+        margin: 10
+    },
+    bottomText2: {
+        fontSize: RFValue(12),
+        fontFamily: FONTS.Montserrat.regular,
+        color: colors.primary, 
+        margin: 10   
     }
-})
+});

@@ -31,7 +31,6 @@ yarn-error.*
 *.pem
 
 # local env files
-.env
 .env*.local
 
 # typescript
@@ -44,6 +43,5 @@ example
 /android
 
 //others
-google-services.json
-GoogleService-Info.plist
 .env
+.git/

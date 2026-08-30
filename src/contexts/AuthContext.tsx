@@ -5,29 +5,81 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut,
+  updateProfile,
   type User,
 } from '@react-native-firebase/auth';
 
+export interface DBUser {
+  id: number;
+  nome: string;
+  email: string;
+  perfil_url: string;
+  nivel: number;
+  tag: string;
+}
+
 interface AuthContextData {
-  user: User | null;
+  firebaseUser: User | null;
+  dbUser: DBUser | null;
   isLoading: boolean;
   getToken: () => Promise<string | null>;
   login: (email: string, pass: string) => Promise<void>;
-  register: (email: string, pass: string) => Promise<void>;
+  register: (email: string, pass: string, name?: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
 
+const API_URL = process.env.EXPO_PUBLIC_API_URL;
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
+  const [dbUser, setDbUser] = useState<DBUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const sincronizarComBackend = async (user: User, nomeOpcional?: string) => {
+  try {
+    const token = await user.getIdToken();
+
+    const resposta = await fetch(`${API_URL}/auth/sincronizar`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}` 
+      },
+      body: JSON.stringify({
+        nome: nomeOpcional || user.displayName || 'Entusiasta',
+        email: user.email,
+      }),
+    });
+
+    if (!resposta.ok) {
+       const erroBackend = await resposta.text();
+       console.error("Motivo da recusa do Go:", erroBackend);
+       throw new Error('Falha ao sincronizar com a API Go');
+    }
+    
+    const dadosDoBanco: DBUser = await resposta.json();
+    setDbUser(dadosDoBanco); 
+  } catch (error) {
+    console.error("Erro na sincronização:", error);
+    await signOut(getAuth()); 
+    setDbUser(null);
+  }
+  };
 
   useEffect(() => {
     const authInstance = getAuth();
 
-    const unsubscribe = onAuthStateChanged(authInstance, (currentUser) => {
-      setUser(currentUser);
+    const unsubscribe = onAuthStateChanged(authInstance, async (currentUser) => {
+      setFirebaseUser(currentUser);
+      
+      if (currentUser) {
+        await sincronizarComBackend(currentUser);
+      } else {
+        setDbUser(null);
+      }
+      
       setIsLoading(false);
     });
 
@@ -37,7 +89,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const getToken = async () => {
     const currentUser = getAuth().currentUser;
     if (!currentUser) return null;
-
     return await currentUser.getIdToken(true);
   };
 
@@ -45,8 +96,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await signInWithEmailAndPassword(getAuth(), email, pass);
   };
 
-  const register = async (email: string, pass: string) => {
-    await createUserWithEmailAndPassword(getAuth(), email, pass);
+  const register = async (email: string, pass: string, name?: string) => {
+    const userCredential = await createUserWithEmailAndPassword(getAuth(), email, pass);
+    
+    if (name && userCredential.user) {
+      await updateProfile(userCredential.user, {
+        displayName: name,
+      });
+      await sincronizarComBackend(userCredential.user, name);
+    }
   };
 
   const logout = async () => {
@@ -55,7 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, isLoading, getToken, login, register, logout }}
+      value={{ firebaseUser, dbUser, isLoading, getToken, login, register, logout }}
     >
       {children}
     </AuthContext.Provider>

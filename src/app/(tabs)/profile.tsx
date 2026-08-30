@@ -1,84 +1,88 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
-import { Fonts } from '@/constants/theme';
-
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView } from 'react-native';
+import { FONTS } from "@/constants/fonts";
+import { colors } from "@/constants/colors";
 import { useAuth } from '../../contexts/AuthContext';
+import { RFValue } from 'react-native-responsive-fontsize';
+import { Avatar } from '@/features/Home/components/AvatarUser';
 
+import { 
+    User, 
+    SlidersVertical, 
+    Bell, 
+    Settings, 
+    Headphones, 
+    FileText, 
+    LogOut, 
+    ChevronRight 
+} from 'lucide-react-native';
 
-const { width } = Dimensions.get('window')
-const card_width = width * 0.40
+const { width } = Dimensions.get('window');
+const card_width = width * 0.42; 
+
+const MenuItem = ({ icon: Icon, title, onPress }: any) => (
+    <TouchableOpacity style={styles.menuItem} onPress={onPress} activeOpacity={0.7}>
+        <View style={styles.menuItemLeft}>
+            <View style={styles.iconContainer}>
+                <Icon size={20} color={colors.primary} />
+            </View>
+            <Text style={styles.menuItemText}>{title}</Text>
+        </View>
+        <ChevronRight size={20} color="#666" />
+    </TouchableOpacity>
+);
 
 export default function ProfileScreen() {
+    const { logout } = useAuth();
     const handleLogout = async () => {
         try {
-            await logout()
+            await logout();
         } catch (error: any) {
-            console.log("Erro ao deslogarL", error)
+            console.log("Erro ao deslogar:", error);
         }
     }
-
-    const { logout } = useAuth()
-
+    const { dbUser } = useAuth()
+    
     return (
-        <View style={styles.container}>
-            <View style={styles.headerView}>
-                <Text style={styles.textHeader}>Sam Campos</Text>
-                <Text style={styles.subTextHeader}>Desalmado</Text>
-            </View>
-
-            <View style={{flexDirection: 'row', marginHorizontal: 20, justifyContent: 'space-between'}}>
-                <View style={styles.cardContainer}>
-                    <Text style={styles.cardText}>Meus {'\n'}carros</Text>
-                    <Text style={styles.cardTextSub}>3</Text>
+        <ScrollView>
+            <View style={styles.container}>
+                <View style={styles.headerView}>
+                    <Avatar imageUrl={dbUser?.perfil_url}/>
+                    <Text style={styles.textHeader}>{dbUser?.nome}!</Text>
+                    <Text style={styles.subTextHeader}>{dbUser?.tag}!</Text>
                 </View>
 
-                <View style={styles.cardContainer}>
-                    <Text style={styles.cardText}>Setup {'\n'}Salvos</Text>
-                    <Text style={styles.cardTextSub}>12</Text>
-                </View>
-            </View>
-
-            <View style={styles.cardBottomContainer}>
-                <View style={styles.cardBottom}>
-                    <Text style={styles.cardBottomText}>Editar Perfil</Text>
-                </View>
-
-                <View style={styles.cardBottom}>
-                    <Text style={styles.cardBottomText}>Meus Setup</Text>
-                </View>
-
-                <View style={styles.cardBottom}>
-                    <Text style={styles.cardBottomText}>Notificacoes</Text>
-                </View>
-
-                <View style={styles.cardBottom}>
-                    <Text style={styles.cardBottomText}>Preferencias</Text>
-                </View>
-
-                <View style={styles.cardBottom}>
-                    <Text style={styles.cardBottomText}>Ajuda e suporte</Text>
-                </View>
-
-                <View style={styles.cardBottom}>
-                    <Text style={styles.cardBottomText}>Termos e privacidade</Text>
-                </View>
-
-                <TouchableOpacity onPress={handleLogout}>
-                    <View style={styles.cardBottom}>
-                       <Text style={styles.cardBottomText}>Sair</Text>
+                <View style={styles.topCardsRow}>
+                    <View style={styles.cardContainer}>
+                        <Text style={styles.cardText}>Meus {'\n'}carros</Text>
+                        <Text style={styles.cardTextSub}>3</Text>
                     </View>
-                </TouchableOpacity>
 
-                
+                    <View style={styles.cardContainer}>
+                        <Text style={styles.cardText}>Setups {'\n'}Salvos</Text>
+                        <Text style={styles.cardTextSub}>12</Text>
+                    </View>
+                </View>
+
+                <View style={styles.menuContainer}>
+                    <MenuItem icon={User} title="Editar perfil" />
+                    <MenuItem icon={SlidersVertical} title="Meus setups" />
+                    <MenuItem icon={Bell} title="Notificações" />
+                    <MenuItem icon={Settings} title="Preferências" />
+                    <MenuItem icon={Headphones} title="Ajuda e suporte" />
+                    <MenuItem icon={FileText} title="Termos e privacidade" />
+                    
+                    <MenuItem icon={LogOut} title="Sair" onPress={handleLogout} />
+                </View>
             </View>
-        </View>
-    )
+        </ScrollView>
+    );
 }
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
-        backgroundColor: '#000'
+        backgroundColor: '#0F0F0F',
+        paddingBottom: 40,
     },
     headerView: {
         justifyContent: 'center',
@@ -86,57 +90,72 @@ const styles = StyleSheet.create({
         marginTop: 80,
     },
     textHeader: {
-        fontSize: 24,
+        fontSize: RFValue(16),
+        fontFamily: FONTS.Montserrat.regular,
         color: '#FFF',
-        fontWeight: 'bold',
-        fontFamily: Fonts.serif
+        marginTop: 12,
     },
     subTextHeader: {
-        fontSize: 20,
-        color: '#FFF',
-        fontFamily: Fonts.serif
+        fontSize: RFValue(12),
+        fontFamily: FONTS.Montserrat.regular,
+        color: '#94a3b8',
+        marginTop: 4,
+    },
+    topCardsRow: {
+        flexDirection: 'row', 
+        marginHorizontal: 20, 
+        justifyContent: 'space-between',
+        marginTop: 20,
     },
     cardContainer: {
         width: card_width,
         height: 120,
-        marginVertical: 20,
-        marginHorizontal: 10,
-        paddingHorizontal: 15,
+        paddingHorizontal: 20,
         alignItems: 'flex-start',
         justifyContent: 'center',
-        backgroundColor: '#1e1e1e',
+        backgroundColor: '#1C1C1E',
         borderRadius: 16,
     },
     cardText: {
-        marginBottom: 10,
+        fontSize: RFValue(13),
+        fontFamily: FONTS.Montserrat.regular,
         color: '#FFF',
-        fontSize: 16,
-        fontFamily: Fonts.serif,
+        marginBottom: 10,
     },
     cardTextSub: {
+        fontSize: RFValue(20),
+        fontFamily: FONTS.Montserrat.regular,
         color: '#FFF',
-        fontSize: 22,
-        fontFamily: Fonts.serif
     },
-    cardBottomContainer: {
-        width: card_width,
-        marginVertical: 20,
-        marginHorizontal: 10,
-        paddingHorizontal: 15,
+    menuContainer: {
+        flex: 1, 
+        marginHorizontal: 20,
+        marginTop: 30,
+        paddingBottom: 40,
+    },
+    menuItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingVertical: 12,
+        marginBottom: 8,
+    },
+    menuItemLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    iconContainer: {
+        width: 44,
+        height: 44,
+        borderRadius: 12,
+        backgroundColor: 'rgba(255, 107, 0, 0.1)', 
+        alignItems: 'center',
         justifyContent: 'center',
-        alignSelf: 'center',
-        backgroundColor: '#1e1e1e',
-        borderRadius: 12
+        marginRight: 16,
     },
-    cardBottom: {
-        padding: 10,
-        borderBottomWidth: 0.4,
-        borderBottomColor: '#FFF'
-    },
-    cardBottomText: {
-        marginBottom: 10,
+    menuItemText: {
+        fontSize: RFValue(14),
+        fontFamily: FONTS.Montserrat.regular,
         color: '#FFF',
-        fontSize: 20,
-        fontFamily: Fonts.serif,
     }
-})
+});
