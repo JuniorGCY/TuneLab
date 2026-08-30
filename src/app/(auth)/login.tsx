@@ -36,7 +36,6 @@ export default function LoginScreen() {
     
     const onSubmit = async (data: LoginFormData) => {
         setErrorMessage('');
-
         try {
             setIsLoggingIn(true);
             await login(data.email, data.password);

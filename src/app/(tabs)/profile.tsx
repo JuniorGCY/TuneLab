@@ -41,14 +41,15 @@ export default function ProfileScreen() {
             console.log("Erro ao deslogar:", error);
         }
     }
-
+    const { dbUser } = useAuth()
+    
     return (
         <ScrollView>
             <View style={styles.container}>
                 <View style={styles.headerView}>
-                    <Avatar />
-                    <Text style={styles.textHeader}>Sem Nome</Text>
-                    <Text style={styles.subTextHeader}>Sem Ranking</Text>
+                    <Avatar imageUrl={dbUser?.perfil_url}/>
+                    <Text style={styles.textHeader}>{dbUser?.nome}!</Text>
+                    <Text style={styles.subTextHeader}>{dbUser?.tag}!</Text>
                 </View>
 
                 <View style={styles.topCardsRow}>

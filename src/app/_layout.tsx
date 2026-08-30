@@ -16,7 +16,7 @@ import {
 SplashScreen.preventAutoHideAsync();
 
 function RootLayoutNav() {
-  const { user, isLoading } = useAuth();
+  const { firebaseUser, dbUser, isLoading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
 
@@ -25,17 +25,19 @@ function RootLayoutNav() {
 
     const inAuthGroup = segments[0] === '(auth)';
 
-    if (!user && !inAuthGroup) {
+    const isLogged = !!firebaseUser && !!dbUser;
+
+    if (!isLogged && !inAuthGroup) {
       router.replace('/(auth)/login');
-    } else if (user && inAuthGroup) {
+    } else if (isLogged && inAuthGroup) {
       router.replace('/(tabs)');
     }
-  }, [user, isLoading, segments]);
+  }, [firebaseUser, dbUser, isLoading, segments]);
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000' }}>
-        <ActivityIndicator size="large" color="#FFF" />
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#0F0F0F' }}>
+        <ActivityIndicator size="large" color="#FF6B00" />
       </View>
     );
   }
@@ -62,7 +64,6 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded, fontError]);
-
 
   if (!fontsLoaded && !fontError) {
     return null;

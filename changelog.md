@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 - Ongoing changes before closing a new release.
 
-## [0.2.0] - 2026-08-14
+## [0.2.0] - 2026-08-28
 ### Added
 - Montserrat fonts for better visibility.
 - Registration, login, home, and profile screens set up with a provisional UI
