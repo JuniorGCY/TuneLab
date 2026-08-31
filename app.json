@@ -2,7 +2,7 @@
   "expo": {
     "name": "TuneLab",
     "slug": "TuneLab",
-    "version": "1.0.0",
+    "version": "0.2.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "tunelab",
@@ -33,6 +33,15 @@
           "backgroundColor": "#208AEF",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Permita que o TuneLab acesse a câmera para escanear e analisar o seu carro.",
+          "microphonePermission": "Permita que o TuneLab acesse seu microfone",
+          "recordAudioAndroid": true,
+          "barcodeScannerEnabled": true
         }
       ],
       "@react-native-firebase/app",

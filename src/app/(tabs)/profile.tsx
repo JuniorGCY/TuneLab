@@ -6,6 +6,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { RFValue } from 'react-native-responsive-fontsize';
 import { Avatar } from '@/features/Home/components/AvatarUser';
 
+
+
 import { 
     User, 
     SlidersVertical, 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, Dimensions, Alert } from "react-native";
 import { RFValue } from "react-native-responsive-fontsize";
 
@@ -7,19 +7,23 @@ import CardSuggestionsUser from "@/features/Home/components/CardSuggestionsUser"
 import { colors } from "@/constants/colors";
 import { FONTS } from "@/constants/fonts";
 
+import CameraScreen from '@/features/Home/components/CameraView';
+
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.75; 
 
-export default function HomeScreen() {
-    const TestCard = [
-        { id: '1', imageUrl: "https://firebasestorage.googleapis.com/v0/b/tunelab-348d7.firebasestorage.app/o/Cars%2Fnissan-gt-r-r35-565ps.jpg?alt=media&token=da283be0-511e-473a-87e6-61afa84e56fe", title: 'Nissan GT-R', subtitle: 'R35 Nismo', hp: '600hp'},
-        { id: '2', imageUrl: "https://firebasestorage.googleapis.com/v0/b/tunelab-348d7.firebasestorage.app/o/Cars%2FBMW-M3-GTR-4-150x150.jpg?alt=media&token=f01ddb60-6aa5-470f-bb73-03a7e6b8872f", title: 'BMW', subtitle: 'M3 GTR', hp: '600hp'},
-    ]
+const TestCard = [
+    { id: '1', imageUrl: "https://firebasestorage.googleapis.com/v0/b/tunelab-348d7.firebasestorage.app/o/Cars%2Fnissan-gt-r-r35-565ps.jpg?alt=media&token=da283be0-511e-473a-87e6-61afa84e56fe", title: 'Nissan GT-R', subtitle: 'R35 Nismo', hp: '600hp'},
+    { id: '2', imageUrl: "https://firebasestorage.googleapis.com/v0/b/tunelab-348d7.firebasestorage.app/o/Cars%2FBMW-M3-GTR-4-150x150.jpg?alt=media&token=f01ddb60-6aa5-470f-bb73-03a7e6b8872f", title: 'BMW', subtitle: 'M3 GTR', hp: '600hp'},
+]
 
-    const TestCard2 = [
-        { id: '1', title: 'Stage 2 Remap', subtitle: '+85 HP'},
-        { id: '2', title: 'Carbon Aero Kit', subtitle: 'Downforce Optimization'},
-    ]
+const TestCard2 = [
+    { id: '1', title: 'Stage 2 Remap', subtitle: '+85 HP'},
+    { id: '2', title: 'Carbon Aero Kit', subtitle: 'Downforce Optimization'},
+]
+
+export default function HomeScreen() {
+    const [showCamera, setShowCamera] = useState(false);
 
     const handleTest = () => {
         Alert.alert("Futuramente!")
@@ -28,10 +32,18 @@ export default function HomeScreen() {
         Alert.alert("Eu já nao disse FUTURAMENTE?!")
     }
 
+    const handleAnalyzeCar = () => {
+       setShowCamera(true);
+    };
+
+    const handleCloseCamera = () => {
+       setShowCamera(false);
+    };
+
     return (
         <View style={styles.container}>
             <View style={styles.headerView}>
-                <TouchableOpacity activeOpacity={0.8}>
+                <TouchableOpacity activeOpacity={0.8} onPress={handleAnalyzeCar}>
                     <View style={styles.button}>
                         <Text style={styles.buttonText}>ANALISAR MEU CARRO</Text>
                     </View>
@@ -78,6 +90,8 @@ export default function HomeScreen() {
                     )}
                 />
             </View>
+
+            {showCamera && <CameraScreen/>}
         </View>
     )
 }
