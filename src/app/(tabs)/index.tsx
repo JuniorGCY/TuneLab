@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, Dimensions, Alert } from "react-native";
 import { RFValue } from "react-native-responsive-fontsize";
 
@@ -28,6 +28,7 @@ export default function HomeScreen() {
     const handleTest = () => {
         Alert.alert("Futuramente!")
     }
+
     const handleTest2 = () => {
         Alert.alert("Eu já nao disse FUTURAMENTE?!")
     }
@@ -52,7 +53,6 @@ export default function HomeScreen() {
 
             <View style={styles.flatListViewCars}>
                 <Text style={styles.textsPrimary}>Meus carros</Text>
-
                 <FlatList 
                     data={TestCard}
                     keyExtractor={(item) => item.id}
@@ -75,7 +75,6 @@ export default function HomeScreen() {
 
             <View style={styles.flatListViewSuggestions}>
                 <Text style={styles.textsPrimary}>Sugestões para você</Text>
-                
                 <FlatList
                     data={TestCard2}
                     keyExtractor={(item) => item.id}
@@ -91,7 +90,11 @@ export default function HomeScreen() {
                 />
             </View>
 
-            {showCamera && <CameraScreen/>}
+            {showCamera && (
+                <View style={StyleSheet.absoluteFill}>
+                    <CameraScreen onClose={handleCloseCamera} />
+                </View>
+            )}
         </View>
     )
 }
