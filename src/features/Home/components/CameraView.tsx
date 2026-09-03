@@ -8,9 +8,14 @@ import {
   Alert,
   ActivityIndicator,
   StatusBar,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
+import { RFValue } from 'react-native-responsive-fontsize';
 import { colors } from '@/constants/colors';
 import { FONTS } from '@/constants/fonts';
 import { uploadToCoreAPI } from '../services/uploadToCoreAPI';
@@ -21,25 +26,18 @@ interface CameraScreenProps {
   onClose: () => void;
 }
 
-export default function CameraScreen({onClose}: CameraScreenProps) {
+export default function CameraScreen({ onClose }: CameraScreenProps) {
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const cameraRef = useRef<CameraView | null>(null);
+  
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const { getToken, firebaseUser, isLoading } = useAuth();
+  
+  const [titulo, setTitulo] = useState('');
+  const [descricao, setDescricao] = useState('');
+  const [hp, setHp] = useState('');
 
-  const realizarRequisicao = async () => {
-    if (isLoading) return; 
-
-    if (!firebaseUser) {
-      throw new Error("Usuário não está autenticado na interface.");
-    }
-
-    const token = await getToken();
-    if (!token) {
-      throw new Error("Falha de comunicação: Não foi possível resgatar o token de sessão.");
-    }
-  };
+  const { getToken, firebaseUser } = useAuth();
 
   if (!cameraPermission) {
     return <View style={styles.container} />;
@@ -61,6 +59,13 @@ export default function CameraScreen({onClose}: CameraScreenProps) {
       </View>
     );
   }
+
+  const handleDiscardImage = () => {
+    setCapturedImage(null);
+    setTitulo('');
+    setDescricao('');
+    setHp('');
+  };
 
   const takePicture = async () => {
     if (cameraRef.current) {
@@ -91,46 +96,39 @@ export default function CameraScreen({onClose}: CameraScreenProps) {
   const handleUpload = async () => {
     if (!capturedImage) return;
 
+    if (!titulo.trim()) {
+        Alert.alert('Atenção', 'Dê um título ao seu projeto antes de salvar.');
+        return;
+    }
+
     setLoading(true);
     try {
-      console.log('1. Iniciando processo completo...');
-      
-      if (!firebaseUser) {
-         throw new Error("Usuário não está logado!");
-      }
+      if (!firebaseUser) throw new Error("Usuário não está logado!");
       
       const token = await getToken();
-        if (!token) {
-        throw new Error("Não foi possível obter o token de autenticação.");
-      }
+      if (!token) throw new Error("Não foi possível obter o token de autenticação.");
 
-      console.log('2. Enviando imagem para o Storage...');
+      console.log('1. Enviando imagem para o Storage...');
       const imageUrl = await uploadToCoreAPI(capturedImage, token);
-      console.log('URL recebida:', imageUrl);
 
-      console.log('3. Salvando dados no Postgres (Neon)...');
+      console.log('2. Salvando dados no Postgres (Neon)...');
       
       const payloadCarro = {
-        titulo: "Meu Primeiro Projeto",
-        descricao: "Carro capturado pelo TuneLab",
-        hp: 250,
+        titulo: titulo.trim(),
+        descricao: descricao.trim(),
+        hp: parseInt(hp, 10) || 0, 
         imageUrl: imageUrl
       };
 
-      const carroSalvo = await createCarAPI(payloadCarro, token);
-      console.log('Carro inserido com sucesso no banco:', carroSalvo);
+      await createCarAPI(payloadCarro, token);
 
-      Alert.alert('Sucesso!', 'Foto enviada e carro cadastrado na base de dados!');
-      setCapturedImage(null);
-    
+      Alert.alert('Sucesso!', 'Veículo cadastrado na sua garagem!');
+      handleDiscardImage();
       onClose();
 
     } catch (error: any) {
       console.log('Erro no fluxo de cadastro:', error);
-      Alert.alert(
-        'Erro',
-        error?.message || 'Falha ao processar o veículo.'
-      );
+      Alert.alert('Erro', error?.message || 'Falha ao processar o veículo.');
     } finally {
       setLoading(false);
     }
@@ -138,25 +136,68 @@ export default function CameraScreen({onClose}: CameraScreenProps) {
   
   if (capturedImage) {
     return (
-      <View style={styles.container}>
+      <KeyboardAvoidingView 
+        style={styles.container} 
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
         <StatusBar barStyle="light-content" />
-        <Image source={{ uri: capturedImage }} style={styles.previewImage} />
-
+        
         <TouchableOpacity
           style={styles.closeButton}
-          onPress={() => setCapturedImage(null)}
+          onPress={handleDiscardImage}
           disabled={loading}
         >
           <Text style={styles.closeButtonText}>✕</Text>
         </TouchableOpacity>
 
+        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+          <Image source={{ uri: capturedImage }} style={styles.previewImageSmall} />
+
+          <View style={styles.formContainer}>
+            <Text style={styles.headerTitle}>Detalhes do Veículo</Text>
+
+            <Text style={styles.label}>Título do Projeto</Text>
+            <TextInput
+              style={styles.input}
+              value={titulo}
+              onChangeText={setTitulo}
+              placeholder="Ex: Golf GTI Stage 2"
+              placeholderTextColor="#666"
+              editable={!loading}
+            />
+
+            <Text style={styles.label}>Descrição</Text>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              value={descricao}
+              onChangeText={setDescricao}
+              placeholder="Ex: Intake em carbono, remap conservador..."
+              placeholderTextColor="#666"
+              multiline
+              numberOfLines={3}
+              editable={!loading}
+            />
+
+            <Text style={styles.label}>Potência Estimada (HP)</Text>
+            <TextInput
+              style={styles.input}
+              value={hp}
+              onChangeText={setHp}
+              placeholder="Ex: 300"
+              placeholderTextColor="#666"
+              keyboardType="numeric"
+              editable={!loading}
+            />
+          </View>
+        </ScrollView>
+
         <View style={styles.previewButtonsContainer}>
           <TouchableOpacity
             style={[styles.actionButton, { backgroundColor: '#333' }]}
-            onPress={() => setCapturedImage(null)}
+            onPress={handleDiscardImage}
             disabled={loading}
           >
-            <Text style={styles.textoBotao}>Tirar Outra</Text>
+            <Text style={styles.textoBotao}>Descartar</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -167,11 +208,11 @@ export default function CameraScreen({onClose}: CameraScreenProps) {
             {loading ? (
               <ActivityIndicator color="#FFF" />
             ) : (
-              <Text style={styles.textoBotao}>Analisar Carro</Text>
+              <Text style={styles.textoBotao}>Salvar na Garagem</Text>
             )}
           </TouchableOpacity>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     );
   }
 
@@ -214,8 +255,53 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#0F0F0F',
   },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 20,
+  },
+  previewImageSmall: {
+    width: '100%',
+    height: 300,
+    resizeMode: 'cover',
+  },
+  formContainer: {
+    padding: 20,
+  },
+  headerTitle: {
+    fontFamily: FONTS.Montserrat.regular,
+    fontSize: RFValue(18),
+    color: '#FFF',
+    marginBottom: 20,
+    marginTop: 10,
+  },
+  label: {
+    fontFamily: FONTS.Montserrat.medium,
+    fontSize: RFValue(12),
+    color: '#CCC',
+    marginBottom: 5,
+  },
+  input: {
+    backgroundColor: '#1E1E1E',
+    borderRadius: 8,
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    color: '#FFF',
+    fontFamily: FONTS.Montserrat.regular,
+    fontSize: RFValue(14),
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  textArea: {
+    height: 80,
+    textAlignVertical: 'top',
+  },
   overlay: {
-    ...StyleSheet.absoluteFill,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     justifyContent: 'space-between',
   },
   closeButton: {
@@ -251,7 +337,7 @@ const styles = StyleSheet.create({
   textoBotao: {
     color: '#FFF',
     fontWeight: 'bold',
-    fontFamily: FONTS.Montserrat.bold,
+    fontFamily: FONTS.Montserrat.regular,
   },
   footerContainer: {
     position: 'absolute',
@@ -290,15 +376,13 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.Montserrat.regular,
     fontSize: 14,
   },
-  previewImage: {
-    flex: 1,
-    resizeMode: 'contain',
-  },
   previewButtonsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     padding: 20,
     backgroundColor: '#0F0F0F',
+    borderTopWidth: 1,
+    borderTopColor: '#222',
   },
   actionButton: {
     flex: 1,

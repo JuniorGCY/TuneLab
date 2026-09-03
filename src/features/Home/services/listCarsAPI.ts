@@ -34,3 +34,56 @@ export async function listCarsAPI(userToken: string): Promise<CarroAPI[]> {
     throw err;
   }
 }
+
+export async function deleteCarAPI(token: string, carId: number): Promise<void> {
+    try {
+        const url = `${process.env.EXPO_PUBLIC_API_URL}/cars/delete?id=${carId}`;
+        const response = await fetch(url, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            },
+        });
+
+        if (!response.ok) {
+            const text = await response.text();
+            throw new Error(text || 'Erro ao deletar veículo');
+        }
+    } catch (err) {
+        console.error('deleteCarAPI error:', err);
+        throw err;
+    }
+}
+
+export async function updateCarAPI(
+    token: string, 
+    carId: number, 
+    titulo: string, 
+    descricao: string, 
+    hp: number
+): Promise<void> {
+    try {
+        const url = `${process.env.EXPO_PUBLIC_API_URL}/cars/update`;
+        const response = await fetch(url, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+                id: carId,
+                titulo,
+                descricao,
+                hp
+            })
+        });
+
+        if (!response.ok) {
+            const text = await response.text();
+            throw new Error(text || 'Erro ao atualizar veículo');
+        }
+    } catch (err) {
+        console.error('updateCarAPI error:', err);
+        throw err;
+    }
+}

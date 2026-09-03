@@ -8,7 +8,9 @@ import { colors } from "@/constants/colors";
 import { FONTS } from "@/constants/fonts";
 import CameraScreen from '@/features/Home/components/CameraView';
 import { useAuth } from '../../contexts/AuthContext'; 
-import { listCarsAPI, CarroAPI } from '../../features/Home/services/listCarsAPI'; 
+import { listCarsAPI, CarroAPI, deleteCarAPI, updateCarAPI } from '../../features/Home/services/listCarsAPI'; 
+import CarDetailsModal from '@/features/Home/components/CarDetailsModal';
+import EditCarModal from '@/features/Home/components/EditCarModal';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.75; 
@@ -20,10 +22,12 @@ const TestCard2 = [
 
 export default function HomeScreen() {
     const { getToken } = useAuth();
-    
     const [showCamera, setShowCamera] = useState(false);
     const [carros, setCarros] = useState<CarroAPI[]>([]);
     const [loadingCarros, setLoadingCarros] = useState(true);
+    const [selectedCar, setSelectedCar] = useState<CarroAPI | null>(null);
+    const [modalVisible, setModalVisible] = useState(false);
+    const [editModalVisible, setEditModalVisible] = useState(false);
 
     // Função responsável por buscar os dados no Go
     const carregarCarros = async () => {
@@ -45,10 +49,6 @@ export default function HomeScreen() {
         carregarCarros();
     }, []);
 
-    const handleTest = () => {
-        Alert.alert("Eu já nao disse FUTURAMENTE?!")
-    }
-
     const handleTest2 = () => {
         Alert.alert("Eu já nao disse FUTURAMENTE?!")
     }
@@ -59,6 +59,39 @@ export default function HomeScreen() {
 
     const handleCloseCamera = () => {
         setShowCamera(false);
+        carregarCarros(); 
+    };
+
+    const handleOpenCarDetails = (car: CarroAPI) => {
+        setSelectedCar(car);
+        setModalVisible(true);
+    };
+
+    const handleOpenEdit = (car: CarroAPI) => {
+        setModalVisible(false);
+        setTimeout(() => {
+            setEditModalVisible(true);
+        }, 300);
+    };
+
+    const handleDeleteCar = async (carId: number) => {
+        try {
+            const token = await getToken();
+            if (!token) return;
+            setModalVisible(false); 
+            await deleteCarAPI(token, carId);
+            carregarCarros(); 
+        } catch (error) {
+            console.error(error);
+            Alert.alert("Erro", "Não foi possível excluir o veículo.");
+        }
+        setModalVisible(false);
+    };
+
+    const handleSaveEdit = async (id: number, titulo: string, descricao: string, hp: number) => {
+        const token = await getToken();
+        if (!token) throw new Error("Usuário não autenticado");
+        await updateCarAPI(token, id, titulo, descricao, hp);
         carregarCarros(); 
     };
 
@@ -94,12 +127,27 @@ export default function HomeScreen() {
                                 subtitle={item.descricao} 
                                 hp={`${item.hp} hp`}
                                 imageUrl={item.imageUrl}
-                                onPress={handleTest}
+                                onPress={() => handleOpenCarDetails(item)}
                             />
                         )}
                     />
                 )}
             </View>
+
+            <CarDetailsModal 
+                visible={modalVisible}
+                car={selectedCar}
+                onClose={() => setModalVisible(false)}
+                onEdit={handleOpenEdit}
+                onDelete={handleDeleteCar}
+            />
+
+            <EditCarModal
+                visible={editModalVisible}
+                car={selectedCar}
+                onClose={() => setEditModalVisible(false)}
+                onSave={handleSaveEdit}
+            />
 
             <View style={styles.flatListViewSuggestions}>
                 <Text style={styles.textsPrimary}>Sugestões para você</Text>
@@ -126,7 +174,6 @@ export default function HomeScreen() {
         </View>
     )
 }
-
 
 const styles = StyleSheet.create({
     container: {
