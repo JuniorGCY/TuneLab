@@ -53,20 +53,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }),
     });
 
-    if (!resposta.ok) {
-       const erroBackend = await resposta.text();
-       console.error("Motivo da recusa do Go:", erroBackend);
-       throw new Error('Falha ao sincronizar com a API Go');
+    if (resposta.status === 401 || resposta.status === 403) {
+      console.error("Acesso revogado pelo backend.");
+      await signOut(getAuth()); 
+      setDbUser(null);
+      return;
     }
-    
+
+    if (!resposta.ok) {
+      throw new Error(`Erro no servidor Go: Status ${resposta.status}`);
+    }
+
     const dadosDoBanco: DBUser = await resposta.json();
     setDbUser(dadosDoBanco); 
+
   } catch (error) {
-    console.error("Erro na sincronização:", error);
-    await signOut(getAuth()); 
-    setDbUser(null);
+    console.warn("Não foi possível sincronizar com o banco de dados no momento:", error);
   }
-  };
+};
 
   useEffect(() => {
     const authInstance = getAuth();

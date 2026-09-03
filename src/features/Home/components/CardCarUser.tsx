@@ -17,6 +17,7 @@ export default function CardCarUser({ title, subtitle, hp, imageUrl, onPress }: 
         contentFit="cover"
         transition={300}
         cachePolicy="disk"
+        onError={(e) => console.log(e.error)}
       />
       
       <View style={styles.overlay} />

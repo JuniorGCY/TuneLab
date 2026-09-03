@@ -1,3 +1,5 @@
+//Responsável por enviar a imagem do carro para a API e receber a URL da imagem salva no servidor
+
 import { fetch } from 'expo/fetch';
 import { File } from 'expo-file-system';
 

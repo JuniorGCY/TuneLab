@@ -14,6 +14,8 @@ import * as ImagePicker from 'expo-image-picker';
 import { colors } from '@/constants/colors';
 import { FONTS } from '@/constants/fonts';
 import { uploadToCoreAPI } from '../services/uploadToCoreAPI';
+import { createCarAPI } from '../services/createCarAPI';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface CameraScreenProps {
   onClose: () => void;
@@ -24,6 +26,20 @@ export default function CameraScreen({onClose}: CameraScreenProps) {
   const cameraRef = useRef<CameraView | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const { getToken, firebaseUser, isLoading } = useAuth();
+
+  const realizarRequisicao = async () => {
+    if (isLoading) return; 
+
+    if (!firebaseUser) {
+      throw new Error("Usuário não está autenticado na interface.");
+    }
+
+    const token = await getToken();
+    if (!token) {
+      throw new Error("Falha de comunicação: Não foi possível resgatar o token de sessão.");
+    }
+  };
 
   if (!cameraPermission) {
     return <View style={styles.container} />;
@@ -77,17 +93,43 @@ export default function CameraScreen({onClose}: CameraScreenProps) {
 
     setLoading(true);
     try {
-      console.log('URI da imagem:', capturedImage);
-      const imageUrl = await uploadToCoreAPI(capturedImage);
+      console.log('1. Iniciando processo completo...');
+      
+      if (!firebaseUser) {
+         throw new Error("Usuário não está logado!");
+      }
+      
+      const token = await getToken();
+        if (!token) {
+        throw new Error("Não foi possível obter o token de autenticação.");
+      }
 
-      Alert.alert('Sucesso!', `Imagem enviada!\nURL: ${imageUrl}`);
+      console.log('2. Enviando imagem para o Storage...');
+      const imageUrl = await uploadToCoreAPI(capturedImage, token);
+      console.log('URL recebida:', imageUrl);
+
+      console.log('3. Salvando dados no Postgres (Neon)...');
+      
+      const payloadCarro = {
+        titulo: "Meu Primeiro Projeto",
+        descricao: "Carro capturado pelo TuneLab",
+        hp: 250,
+        imageUrl: imageUrl
+      };
+
+      const carroSalvo = await createCarAPI(payloadCarro, token);
+      console.log('Carro inserido com sucesso no banco:', carroSalvo);
+
+      Alert.alert('Sucesso!', 'Foto enviada e carro cadastrado na base de dados!');
       setCapturedImage(null);
+    
+      onClose();
+
     } catch (error: any) {
-      console.log('Erro completo:', error);
-      console.log('Mensagem:', error?.message);
+      console.log('Erro no fluxo de cadastro:', error);
       Alert.alert(
         'Erro',
-        error?.message || 'Falha ao enviar a foto para o TuneLab Core.'
+        error?.message || 'Falha ao processar o veículo.'
       );
     } finally {
       setLoading(false);

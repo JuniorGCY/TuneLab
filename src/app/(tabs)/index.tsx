@@ -1,21 +1,17 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Dimensions, Alert } from "react-native";
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Dimensions, Alert, ActivityIndicator } from "react-native";
 import { RFValue } from "react-native-responsive-fontsize";
 
 import CardCarUser from "@/features/Home/components/CardCarUser";
 import CardSuggestionsUser from "@/features/Home/components/CardSuggestionsUser";
 import { colors } from "@/constants/colors";
 import { FONTS } from "@/constants/fonts";
-
 import CameraScreen from '@/features/Home/components/CameraView';
+import { useAuth } from '../../contexts/AuthContext'; 
+import { listCarsAPI, CarroAPI } from '../../features/Home/services/listCarsAPI'; 
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.75; 
-
-const TestCard = [
-    { id: '1', imageUrl: "https://firebasestorage.googleapis.com/v0/b/tunelab-348d7.firebasestorage.app/o/Cars%2Fnissan-gt-r-r35-565ps.jpg?alt=media&token=da283be0-511e-473a-87e6-61afa84e56fe", title: 'Nissan GT-R', subtitle: 'R35 Nismo', hp: '600hp'},
-    { id: '2', imageUrl: "https://firebasestorage.googleapis.com/v0/b/tunelab-348d7.firebasestorage.app/o/Cars%2FBMW-M3-GTR-4-150x150.jpg?alt=media&token=f01ddb60-6aa5-470f-bb73-03a7e6b8872f", title: 'BMW', subtitle: 'M3 GTR', hp: '600hp'},
-]
 
 const TestCard2 = [
     { id: '1', title: 'Stage 2 Remap', subtitle: '+85 HP'},
@@ -23,10 +19,34 @@ const TestCard2 = [
 ]
 
 export default function HomeScreen() {
+    const { getToken } = useAuth();
+    
     const [showCamera, setShowCamera] = useState(false);
+    const [carros, setCarros] = useState<CarroAPI[]>([]);
+    const [loadingCarros, setLoadingCarros] = useState(true);
+
+    // Função responsável por buscar os dados no Go
+    const carregarCarros = async () => {
+        setLoadingCarros(true);
+        try {
+            const token = await getToken();
+            if (!token) throw new Error("Usuário não autenticado");
+
+            const listaDeCarros = await listCarsAPI(token);
+            setCarros(listaDeCarros);
+        } catch (error) {
+            console.error("Erro ao carregar carros:", error);
+        } finally {
+            setLoadingCarros(false);
+        }
+    };
+
+    useEffect(() => {
+        carregarCarros();
+    }, []);
 
     const handleTest = () => {
-        Alert.alert("Futuramente!")
+        Alert.alert("Eu já nao disse FUTURAMENTE?!")
     }
 
     const handleTest2 = () => {
@@ -34,11 +54,12 @@ export default function HomeScreen() {
     }
 
     const handleAnalyzeCar = () => {
-       setShowCamera(true);
+        setShowCamera(true);
     };
 
     const handleCloseCamera = () => {
-       setShowCamera(false);
+        setShowCamera(false);
+        carregarCarros(); 
     };
 
     return (
@@ -53,24 +74,31 @@ export default function HomeScreen() {
 
             <View style={styles.flatListViewCars}>
                 <Text style={styles.textsPrimary}>Meus carros</Text>
-                <FlatList 
-                    data={TestCard}
-                    keyExtractor={(item) => item.id}
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.scrollContainer}
-                    decelerationRate="fast"
-                    snapToInterval={CARD_WIDTH + 16} 
-                    renderItem={({ item }) => (
-                        <CardCarUser 
-                            title={item.title} 
-                            subtitle={item.subtitle} 
-                            hp={item.hp} 
-                            imageUrl={item.imageUrl}
-                            onPress={() => {handleTest()}}
-                        />
-                    )}
-                />
+                
+                {loadingCarros ? (
+                    <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 20 }} />
+                ) : carros.length === 0 ? (
+                    <Text style={{ color: '#888', paddingHorizontal: 20 }}>Você ainda não tem carros analisados.</Text>
+                ) : (
+                    <FlatList 
+                        data={carros} 
+                        keyExtractor={(item) => item.id.toString()}
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={styles.scrollContainer}
+                        decelerationRate="fast"
+                        snapToInterval={CARD_WIDTH + 16} 
+                        renderItem={({ item }) => (
+                            <CardCarUser 
+                                title={item.titulo} 
+                                subtitle={item.descricao} 
+                                hp={`${item.hp} hp`}
+                                imageUrl={item.imageUrl}
+                                onPress={handleTest}
+                            />
+                        )}
+                    />
+                )}
             </View>
 
             <View style={styles.flatListViewSuggestions}>
@@ -84,7 +112,7 @@ export default function HomeScreen() {
                         <CardSuggestionsUser 
                            title={item.title}
                            subtitle={item.subtitle}
-                           onPress={() => {handleTest2()}}
+                           onPress={handleTest2}
                         />
                     )}
                 />
@@ -98,6 +126,7 @@ export default function HomeScreen() {
         </View>
     )
 }
+
 
 const styles = StyleSheet.create({
     container: {
