@@ -12,8 +12,11 @@ import {
 } from 'react-native';
 import { FONTS } from '@/constants/fonts';
 
+import { TuningCard } from '@/features/ai-turning/components/TuningCard';
+import { TuningVisualCard } from '@/features/ai-turning/components/TuningVisualCard'
+import { TuningResult } from '@/features/ai-turning/components/TuningResult';
+
 import { RFValue } from 'react-native-responsive-fontsize';
-import { Zap, Wind, Gauge} from 'lucide-react-native';
 
 const performanceData = [
   {
@@ -23,7 +26,6 @@ const performanceData = [
     gains: '+35hp /\n+55Nm',
     cost: '~R$ 2.500',
     difficulty: 1, // 1 de 3
-    icon: Zap,
   },
   {
     id: '2',
@@ -32,7 +34,6 @@ const performanceData = [
     gains: '+8hp / Melhor\nronco',
     cost: '~R$ 1.800',
     difficulty: 2, // 2 de 3
-    icon: Wind,
   },
   {
     id: '3',
@@ -40,56 +41,36 @@ const performanceData = [
     category: 'EXHAUST',
     gains: '+15hp',
     cost: '~R$ 3.200',
-    difficulty: 2, // 2 de 3
-    icon: Gauge,
+    difficulty: 2, // 2 de 
   },
 ];
 
-const TuningCard = ({ item }) => {
-  const IconComponent = item.icon
-  return (
-    <View style={styles.cardContainer}>
-      <View style={styles.cardHeader}>
-        <Text style={styles.cardTitle}>{item.title}</Text>
-        <Text style={styles.cardCategory}>{item.category}</Text>
-      </View>
-
-      <View style={styles.cardBody}>
-        <View style={styles.cardColumn}>
-          <Text style={styles.label}>Ganhos</Text>
-          <View style={styles.infoRow}>
-            <IconComponent size={RFValue(20)} color="#FFF" />
-            <Text style={styles.infoTextValue}>{item.gains}</Text>
-          </View>
-        </View>
-
-        <View style={styles.cardColumn}>
-          <Text style={styles.label}>Custo</Text>
-          <View style={styles.infoRow}>
-            <Text style={styles.icon}>$</Text>
-            <Text style={styles.infoTextValue}>{item.cost}</Text>
-          </View>
-        </View>
-      </View>
-
-      <View style={styles.difficultyContainer}>
-        <Text style={styles.icon}>🔧</Text>
-        <Text style={styles.label}>Dificuldade</Text>
-      </View>
-      <View style={styles.difficultyBars}>
-        {[1, 2, 3].map((level) => (
-          <View 
-            key={level} 
-            style={[
-              styles.bar, 
-              level <= item.difficulty ? styles.barActive : styles.barInactive
-            ]} 
-          />
-        ))}
-      </View>
-    </View>
-  );
-};
+const visualData = [
+  {
+    id: '1',
+    title: 'Body Kit Aerodinamico',
+    effect: 'Downforce + Visual Agressivo',
+    category: 'AERO',
+    cost: '~R$ 4.200',
+    difficulty: 2,
+  },
+  {
+    id: '2',
+    title: 'Rodas Enkei RPF1 18',
+    effect: '-4KG por roda/rebaixo 30mm',
+    category: 'Stance',
+    cost: '~R$ 6.800',
+    difficulty: 2,
+  },
+  {
+    id: '3',
+    title: 'Farois Full LED Vland Smoke',
+    effect: 'Estética Dark + iluminacao 6000k',
+    category: 'Lighting',
+    cost: '~R$ 2.900',
+    difficulty: 1,
+  },
+];
 
 export default function AITuningAnalysisModal({ visible, onClose }) {
   const [activeTab, setActiveTab] = useState('Performance');
@@ -105,7 +86,6 @@ export default function AITuningAnalysisModal({ visible, onClose }) {
         <StatusBar barStyle="light-content" backgroundColor="#121212" />
         
         <ScrollView style={styles.scrollView} bounces={false}>
-          {/* Header e Hero Section */}
           <ImageBackground
             source={{ uri: 'https://via.placeholder.com/800x600/1e1e1e/888888?text=Honda+Civic' }} // Substitua pela imagem real
             style={styles.heroImage}
@@ -115,26 +95,22 @@ export default function AITuningAnalysisModal({ visible, onClose }) {
               <TouchableOpacity onPress={onClose} style={styles.iconButton}>
                 <Text style={styles.headerIcon}>←</Text>
               </TouchableOpacity>
-              <Text style={styles.headerTitle}>AI Tuning Analysis</Text>
-              <TouchableOpacity style={styles.iconButton}>
-                <Text style={styles.headerIcon}>⋮</Text>
-              </TouchableOpacity>
+              <Text style={styles.headerTitle}>Analise completa</Text>
             </View>
 
             <View style={styles.heroContent}>
               <Text style={styles.carName}>Honda Civic Si 2018</Text>
               <View style={styles.badgesRow}>
                 <View style={styles.badge}>
-                  <Text style={styles.badgeText}>🛡️ IA Confidence: 98%</Text>
+                  <Text style={styles.badgeText}>Precisão IA: 98%</Text>
                 </View>
                 <TouchableOpacity style={styles.editButton}>
-                  <Text style={styles.editButtonText}>✏️ Corrigir modelo</Text>
+                  <Text style={styles.editButtonText}>Corrigir modelo</Text>
                 </TouchableOpacity>
               </View>
             </View>
           </ImageBackground>
 
-          {/* Navegação por Abas */}
           <View style={styles.tabsContainer}>
             {['Visual', 'Performance', 'Setup Completo'].map((tab) => (
               <TouchableOpacity 
@@ -149,17 +125,23 @@ export default function AITuningAnalysisModal({ visible, onClose }) {
             ))}
           </View>
 
-          {/* Lista de Cartões (Conteúdo da aba Performance) */}
           <View style={styles.contentContainer}>
             {activeTab === 'Performance' && 
               performanceData.map((item) => (
                 <TuningCard key={item.id} item={item} />
               ))
             }
+            {activeTab === 'Visual' && 
+              visualData.map((item) => (
+                <TuningVisualCard key={item.id} item={item} />
+              ))
+            }
+            {activeTab === 'Setup Completo' && 
+                <TuningResult />
+            }
           </View>
         </ScrollView>
 
-        {/* Rodapé Fixo */}
         <View style={styles.footer}>
           <TouchableOpacity style={styles.saveButton}>
             <Text style={styles.saveButtonText}>SALVAR ESTE SETUP</Text>
@@ -262,7 +244,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: 16,
-    paddingBottom: 100, // Espaço para o botão do rodapé
+    paddingBottom: 100,
   },
   cardContainer: {
     backgroundColor: '#202020',
