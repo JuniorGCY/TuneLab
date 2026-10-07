@@ -47,7 +47,8 @@
       "@react-native-firebase/app",
       "@react-native-firebase/crashlytics",
       "expo-build-properties",
-      "expo-font"
+      "expo-font",
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true,

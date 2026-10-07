@@ -64,12 +64,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
+  // flex:1 deixa o título quebrar em várias linhas em vez de empurrar a categoria pra fora do card
   cardTitle: {
+    flex: 1,
+    marginRight: 12,
     color: '#FFF',
     fontSize: RFValue(12),
     fontFamily: FONTS.Montserrat.bold
   },
   cardCategory: {
+    flexShrink: 0,
+    alignSelf: 'flex-start',
     color: '#FF6B00',
     fontSize: RFValue(10),
     fontWeight: '900',
@@ -83,12 +88,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 16,
   },
+  // Ganhos pode ter texto longo (inclui aviso de legalidade): ocupa o espaço que sobra e quebra linha.
+  // Custo é curto e nunca deve ser espremido.
   cardColumn: {
     flex: 1,
+    marginRight: 12,
     alignItems: 'flex-start'
   },
   cardColumn2: {
-    flex: 1,
+    flexShrink: 0,
     alignItems: 'flex-end',
   },
   label: {

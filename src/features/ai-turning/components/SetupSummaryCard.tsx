@@ -1,31 +1,40 @@
 import React from 'react';
 import { View, Text, StyleSheet} from 'react-native';
 import { FONTS } from '@/constants/fonts';
-
 import { RFValue } from 'react-native-responsive-fontsize';
+import type { SetupSummary } from '@/features/Home/types/UploadResponse';
+import { resolveSetupTitle } from '@/features/ai-turning/utils/setupTitle';
 
-export const SetupSummaryCard = ({ data }) => {
+type SetupSummaryCardProps = {
+  data?: Partial<SetupSummary>;
+};
+
+export const SetupSummaryCard = ({ data }: SetupSummaryCardProps) => {
+  const safeData = data ?? {};
+
   return (
     <View style={styles.card}>
       <View style={styles.aiBadge}>
         <Text style={styles.aiBadgeText}>Recomendação da Mia</Text>
       </View>
-      <Text style={styles.cardTitle}>Setup Integrado: Stage 2 + Street Aero</Text>
+      <Text style={styles.cardTitle} accessibilityRole="header" numberOfLines={2}>
+        {resolveSetupTitle(safeData.title)}
+      </Text>
       
       <View style={styles.statsGrid}>
         <View style={styles.statColumn}>
           <Text style={styles.statLabel}>Potência Total</Text>
-          <Text style={styles.statValueHighlight}>{data.totalPower}</Text>
-          <Text style={styles.statSub}>{data.powerGain}</Text>
+          <Text style={styles.statValueHighlight}>{safeData.totalPower || 'N/D'}</Text>
+          <Text style={styles.statSub}>{safeData.powerGain || '---'}</Text>
         </View>
         <View style={styles.statColumn}>
           <Text style={styles.statLabel}>Custo Estimado</Text>
-          <Text style={styles.statValue}>{data.estimatedCost}</Text>
+          <Text style={styles.statValue}>{safeData.estimatedCost || 'N/D'}</Text>
           <Text style={styles.statSub}>peças + mão de obra</Text>
         </View>
         <View style={styles.statColumn}>
           <Text style={styles.statLabel}>Instalação</Text>
-          <Text style={styles.statValue}>{data.installationTime}</Text>
+          <Text style={styles.statValue}>{safeData.installationTime || 'N/D'}</Text>
           <Text style={styles.statSub}>tempo estimado</Text>
         </View>
       </View>

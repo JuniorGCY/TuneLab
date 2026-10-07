@@ -46,16 +46,6 @@ function RootLayoutNav() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(auth)" />
       <Stack.Screen name="(tabs)" />
-
-      //Rotas ocultas, que não aparecem na barra de navegação inferior, mas podem ser acessadas via navegação programática
-      <Stack.Screen 
-        name="analysis"
-        options={{
-          presentation: 'modal',
-          animation: 'slide_from_bottom',
-          headerShown: false
-        }}
-         />
     </Stack>
   );
 }

@@ -1,10 +1,8 @@
 import { Tabs } from "expo-router";
 import { 
     Home, 
-    Car, 
-    Users, 
-    Map, 
-    User 
+    Car,
+    User
 } from 'lucide-react-native';
 import { colors } from "@/constants/colors";
 import { FONTS } from "@/constants/fonts";
@@ -43,26 +41,6 @@ export default function TabsLayout() {
                     title: 'Mia',
                     tabBarIcon: ({ color, size }) => (
                         <Car color={color} size={size} />
-                    )
-                }}
-            />
-
-            <Tabs.Screen 
-                name="comunidade" 
-                options={{
-                    title: 'Comunidade',
-                    tabBarIcon: ({ color, size }) => (
-                        <Users color={color} size={size} />
-                    )
-                }}
-            />
-
-            <Tabs.Screen 
-                name="mapa" 
-                options={{
-                    title: 'Mapa',
-                    tabBarIcon: ({ color, size }) => (
-                        <Map color={color} size={size} />
                     )
                 }}
             />

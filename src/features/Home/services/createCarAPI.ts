@@ -7,13 +7,13 @@ interface CarroPayload {
   descricao: string;
   hp: number;
   imageUrl: string;
+  imagemModificadaUrl?: string;
+  setup_ia: any;
 }
 
 export async function createCarAPI(payload: CarroPayload, userToken: string) {
   try {
     const url = `${process.env.EXPO_PUBLIC_API_URL}/cars/create`;
-    console.log('POST →', url);
-
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -24,7 +24,7 @@ export async function createCarAPI(payload: CarroPayload, userToken: string) {
     });
 
     const text = await response.text();
-    
+
     if (!response.ok) {
       throw new Error(text || `Erro ao salvar no banco (status ${response.status})`);
     }

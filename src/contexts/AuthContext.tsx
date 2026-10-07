@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import {
   getAuth,
   onAuthStateChanged,
@@ -90,11 +90,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return unsubscribe;
   }, []);
 
-  const getToken = async () => {
+  // Estável (useCallback) para poder entrar em dependências de hooks sem refazer efeitos.
+  // getIdToken() sem "true" usa o token em cache e o renova sozinho perto de expirar;
+  // com "true" cada chamada à API fazia antes uma ida extra aos servidores do Google.
+  const getToken = useCallback(async () => {
     const currentUser = getAuth().currentUser;
     if (!currentUser) return null;
-    return await currentUser.getIdToken(true);
-  };
+    return await currentUser.getIdToken();
+  }, []);
 
   const login = async (email: string, pass: string) => {
     await signInWithEmailAndPassword(getAuth(), email, pass);

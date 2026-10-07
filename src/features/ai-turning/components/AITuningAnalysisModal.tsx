@@ -1,79 +1,85 @@
 import React, { useState } from 'react';
-import { 
-  Modal, 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  TouchableOpacity, 
-  ImageBackground, 
-  SafeAreaView,
-  StatusBar
+import {
+  Modal,
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  ImageBackground,
+  StatusBar,
+  Linking,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { FONTS } from '@/constants/fonts';
 
 import { TuningCard } from '@/features/ai-turning/components/TuningCard';
-import { TuningVisualCard } from '@/features/ai-turning/components/TuningVisualCard'
+import { TuningVisualCard } from '@/features/ai-turning/components/TuningVisualCard';
 import { TuningResult } from '@/features/ai-turning/components/TuningResult';
-
 import { RFValue } from 'react-native-responsive-fontsize';
 
-const performanceData = [
-  {
-    id: '1',
-    title: 'Stage 1 Remap',
-    category: 'ECU',
-    gains: '+35hp /\n+55Nm',
-    cost: '~R$ 2.500',
-    difficulty: 1, // 1 de 3
-  },
-  {
-    id: '2',
-    title: 'Cold Air Intake',
-    category: 'INTAKE',
-    gains: '+8hp / Melhor\nronco',
-    cost: '~R$ 1.800',
-    difficulty: 2, // 2 de 3
-  },
-  {
-    id: '3',
-    title: 'Downpipe High-Flow',
-    category: 'EXHAUST',
-    gains: '+15hp',
-    cost: '~R$ 3.200',
-    difficulty: 2, // 2 de 
-  },
-];
+import { createCarAPI } from '@/features/Home/services/createCarAPI';
+import { useAuth } from '@/contexts/AuthContext';
+import { Alert, ActivityIndicator } from 'react-native';
 
-const visualData = [
-  {
-    id: '1',
-    title: 'Body Kit Aerodinamico',
-    effect: 'Downforce + Visual Agressivo',
-    category: 'AERO',
-    cost: '~R$ 4.200',
-    difficulty: 2,
-  },
-  {
-    id: '2',
-    title: 'Rodas Enkei RPF1 18',
-    effect: '-4KG por roda/rebaixo 30mm',
-    category: 'Stance',
-    cost: '~R$ 6.800',
-    difficulty: 2,
-  },
-  {
-    id: '3',
-    title: 'Farois Full LED Vland Smoke',
-    effect: 'Estética Dark + iluminacao 6000k',
-    category: 'Lighting',
-    cost: '~R$ 2.900',
-    difficulty: 1,
-  },
-];
+import { UploadResponse } from '@/features/Home/types/UploadResponse';
 
-export default function AITuningAnalysisModal({ visible, onClose }) {
+interface ModalProps {
+  visible: boolean;
+  onClose: () => void;
+  data: UploadResponse | null;
+}
+
+export default function AITuningAnalysisModal({ visible, onClose, data }: ModalProps) {
   const [activeTab, setActiveTab] = useState('Performance');
+  const [isSaving, setIsSaving] = useState(false); // Novo estado
+  const { getToken } = useAuth(); // Puxa o toke
+
+  // Proteção: se não houver dados, não renderiza o modal quebrado
+  if (!data || !data.ai_setup) return null;
+
+  const { ai_setup, imageUrl, imagemModificadaUrl } = data;
+  const perfItems = ai_setup.performance_items || [];
+  const visItems = ai_setup.visual_items || [];
+
+  // Na aba Visual mostramos o carro já com o setup aplicado pela IA, quando disponível.
+  // Se a geração de imagem não rodou (sem crédito no Gemini, por exemplo), caímos de
+  // volta pra foto original em vez de quebrar a tela.
+  const temImagemModificada = !!imagemModificadaUrl;
+  const heroImageUri = activeTab === 'Visual' && temImagemModificada ? imagemModificadaUrl : imageUrl;
+
+  const handleDownloadImagemModificada = () => {
+    if (!imagemModificadaUrl) return;
+    Linking.openURL(imagemModificadaUrl);
+  };
+
+  const handleSaveSetup = async () => {
+    setIsSaving(true)
+
+    try {
+      const token = await getToken();
+      if (!token) throw new Error("Não autenticado");
+
+      const payload = {
+        titulo: "Projeto Tuning IA", // Ou pegue o modelo que a IA retornou
+        descricao: ai_setup.setup_summary.powerGain + " - " + ai_setup.setup_summary.estimatedCost,
+        hp: parseInt(ai_setup.setup_summary.totalPower) || 0,
+        imageUrl: imageUrl, // A URL que o Go retornou
+        imagemModificadaUrl: imagemModificadaUrl,
+        setup_ia: ai_setup, // O JSONB gigante vai todo pra cá!
+      }
+
+      await createCarAPI(payload,token)
+
+      Alert.alert("Sucesso!", "Seu projeto está salvo na garagem!")
+      onClose(); // Fecha o modal e volta pra Home
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Erro", "Não foi possível salvar na garagem.");
+    } finally {
+      setIsSaving(false);
+    }
+  }
 
   return (
     <Modal
@@ -84,10 +90,10 @@ export default function AITuningAnalysisModal({ visible, onClose }) {
     >
       <SafeAreaView style={styles.modalContainer}>
         <StatusBar barStyle="light-content" backgroundColor="#121212" />
-        
+
         <ScrollView style={styles.scrollView} bounces={false}>
           <ImageBackground
-            source={{ uri: 'https://via.placeholder.com/800x600/1e1e1e/888888?text=Honda+Civic' }} // Substitua pela imagem real
+            source={{ uri: heroImageUri }}
             style={styles.heroImage}
             imageStyle={{ opacity: 0.6 }}
           >
@@ -95,26 +101,29 @@ export default function AITuningAnalysisModal({ visible, onClose }) {
               <TouchableOpacity onPress={onClose} style={styles.iconButton}>
                 <Text style={styles.headerIcon}>←</Text>
               </TouchableOpacity>
-              <Text style={styles.headerTitle}>Analise completa</Text>
+              <Text style={styles.headerTitle}>Análise Completa</Text>
+
+              {activeTab === 'Visual' && temImagemModificada && (
+                <TouchableOpacity onPress={handleDownloadImagemModificada} style={styles.iconButton}>
+                  <Text style={styles.headerIcon}>⬇</Text>
+                </TouchableOpacity>
+              )}
             </View>
 
             <View style={styles.heroContent}>
-              <Text style={styles.carName}>Honda Civic Si 2018</Text>
+              <Text style={styles.carName}>Seu Projeto Exclusivo</Text>
               <View style={styles.badgesRow}>
                 <View style={styles.badge}>
-                  <Text style={styles.badgeText}>Precisão IA: 98%</Text>
+                  <Text style={styles.badgeText}>Powered by TuneLab AI</Text>
                 </View>
-                <TouchableOpacity style={styles.editButton}>
-                  <Text style={styles.editButtonText}>Corrigir modelo</Text>
-                </TouchableOpacity>
               </View>
             </View>
           </ImageBackground>
 
           <View style={styles.tabsContainer}>
-            {['Visual', 'Performance', 'Setup Completo'].map((tab) => (
-              <TouchableOpacity 
-                key={tab} 
+            {['Performance', 'Visual', 'Setup Completo'].map((tab) => (
+              <TouchableOpacity
+                key={tab}
                 style={[styles.tab, activeTab === tab && styles.tabActive]}
                 onPress={() => setActiveTab(tab)}
               >
@@ -126,25 +135,45 @@ export default function AITuningAnalysisModal({ visible, onClose }) {
           </View>
 
           <View style={styles.contentContainer}>
-            {activeTab === 'Performance' && 
-              performanceData.map((item) => (
+            <View style={styles.disclaimer} accessible accessibilityRole="text">
+              <Text style={styles.disclaimerText}>
+                Sugestões geradas por IA: peças, preços e ganhos de potência são estimativas. Antes
+                de instalar qualquer modificação, confirme a compatibilidade com o seu veículo e
+                verifique a legislação local (homologação e certificação).
+              </Text>
+            </View>
+
+            {activeTab === 'Performance' &&
+              perfItems.map((item) => (
                 <TuningCard key={item.id} item={item} />
               ))
             }
-            {activeTab === 'Visual' && 
-              visualData.map((item) => (
-                <TuningVisualCard key={item.id} item={item} />
-              ))
-            }
-            {activeTab === 'Setup Completo' && 
-                <TuningResult />
+            {activeTab === 'Visual' && (
+              <>
+                {temImagemModificada && (
+                  <TouchableOpacity style={styles.downloadButton} onPress={handleDownloadImagemModificada}>
+                    <Text style={styles.downloadButtonText}>⬇ Baixar imagem modificada</Text>
+                  </TouchableOpacity>
+                )}
+                {visItems.map((item) => (
+                  <TuningVisualCard key={item.id} item={item} />
+                ))}
+              </>
+            )}
+            {activeTab === 'Setup Completo' &&
+                <TuningResult setupData={ai_setup} /> // Passamos os dados pro componente filho!
             }
           </View>
         </ScrollView>
 
         <View style={styles.footer}>
-          <TouchableOpacity style={styles.saveButton}>
-            <Text style={styles.saveButtonText}>SALVAR ESTE SETUP</Text>
+          <TouchableOpacity style={styles.saveButton} onPress={handleSaveSetup} disabled={isSaving}>
+            {isSaving ? (
+              <ActivityIndicator color="#FFF" />
+            ): (
+              <Text style={styles.saveButtonText}>Salvar esse Setup</Text>
+            )}
+
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -212,6 +241,19 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
   },
+  disclaimer: {
+    backgroundColor: 'rgba(255, 107, 0, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 107, 0, 0.35)',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+  },
+  disclaimerText: {
+    color: '#DDD',
+    fontSize: 12,
+    lineHeight: 18,
+  },
   editButton: {
     padding: 6,
   },
@@ -245,6 +287,20 @@ const styles = StyleSheet.create({
   contentContainer: {
     padding: 16,
     paddingBottom: 100,
+  },
+  downloadButton: {
+    backgroundColor: '#1E1E1E',
+    borderWidth: 1,
+    borderColor: '#FF6B00',
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  downloadButtonText: {
+    color: '#FF6B00',
+    fontSize: 13,
+    fontWeight: '700',
   },
   cardContainer: {
     backgroundColor: '#202020',
