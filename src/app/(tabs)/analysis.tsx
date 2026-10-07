@@ -7,7 +7,7 @@ import { CarFront, Car, Cpu, Upload, X } from "lucide-react-native";
 import { useRouter } from "expo-router";
 
 import { useAuth } from '@/contexts/AuthContext';
-import { uploadMultipleToCoreAPI } from '@/features/Home/services/uploadToCoreAPI';
+import { isVehicleMismatchError, uploadMultipleToCoreAPI } from '@/features/Home/services/uploadToCoreAPI';
 import AITuningAnalysisModal from "@/features/ai-turning/components/AITuningAnalysisModal";
 import { UploadResponse } from "@/features/Home/types/UploadResponse";
 import CameraScreen from "@/features/analysis/components/CameraView";
@@ -42,6 +42,17 @@ export default function Analysis() {
 
     const totalFotosPreenchidas = fotosMatriz.filter((uri) => uri !== null).length;
 
+    // Depois de salvar, o formulário volta ao estado inicial. Sem isso, a próxima análise
+    // saía com o carro e as fotos da anterior (ex: fotos de um BMW com "Polo Track" no campo).
+    const handleSetupSalvo = () => {
+        setModalVisible(false);
+        setFotosMatriz([null, null, null, null]);
+        setObjetivo('');
+        setVeiculo('');
+        setAnaliseResultado(null);
+        router.navigate('/(tabs)');
+    };
+
     // Quando clica em um slot vazio, abre a câmera guardando qual botão foi clicado
     const handleOpenCapture = (index: number) => {
         setActiveSlotIndex(index);
@@ -66,23 +77,41 @@ export default function Analysis() {
         setFotosMatriz(novasFotos);
     };
 
-    const handleStartAnalysis = async () => {
+    const handleStartAnalysis = () => {
         if (totalFotosPreenchidas === 0) {
             Alert.alert("Atenção", "Adicione pelo menos uma foto do veículo na matriz.");
             return;
         }
+        runAnalysis();
+    };
+
+    // confirmVehicle = o usuário já viu o aviso de "fotos de outro carro" e quis seguir.
+    const runAnalysis = async (confirmVehicle = false) => {
         setLoading(true);
         try {
             const token = await getToken();
             if (!token) throw new Error("Usuário não autenticado.");
 
             const fotosValidas = fotosMatriz.filter((uri): uri is string => uri !== null);
-            const respostaIA = await uploadMultipleToCoreAPI(fotosValidas, objetivo || "Melhoria de performance e visual", token, veiculo.trim());
+            const respostaIA = await uploadMultipleToCoreAPI(
+                fotosValidas,
+                objetivo || "Melhoria de performance e visual",
+                token,
+                veiculo.trim(),
+                { confirmVehicle }
+            );
 
             setAnaliseResultado(respostaIA);
             setModalVisible(true);
 
         } catch (error: any) {
+            if (isVehicleMismatchError(error)) {
+                Alert.alert("Confira o carro", error.message, [
+                    { text: "Corrigir", style: "cancel" },
+                    { text: "Analisar mesmo assim", onPress: () => runAnalysis(true) },
+                ]);
+                return;
+            }
             console.error("Erro na análise IA:", error);
             Alert.alert("Erro", error?.message || "Não foi possível concluir a análise.");
         } finally {
@@ -207,6 +236,7 @@ export default function Analysis() {
                 <AITuningAnalysisModal
                     visible={modalVisible}
                     onClose={() => setModalVisible(false)}
+                    onSaved={handleSetupSalvo}
                     data={analiseResultado}
                 />
             )}
