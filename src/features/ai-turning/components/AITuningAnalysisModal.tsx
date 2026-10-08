@@ -26,11 +26,14 @@ import { UploadResponse } from '@/features/Home/types/UploadResponse';
 
 interface ModalProps {
   visible: boolean;
+  // Fechar sem salvar (seta de voltar): a tela de análise mantém fotos e textos.
   onClose: () => void;
+  // Setup salvo na garagem: a tela de análise limpa o formulário e vai para a Home.
+  onSaved: () => void;
   data: UploadResponse | null;
 }
 
-export default function AITuningAnalysisModal({ visible, onClose, data }: ModalProps) {
+export default function AITuningAnalysisModal({ visible, onClose, onSaved, data }: ModalProps) {
   const [activeTab, setActiveTab] = useState('Performance');
   const [isSaving, setIsSaving] = useState(false); // Novo estado
   const { getToken } = useAuth(); // Puxa o toke
@@ -72,7 +75,7 @@ export default function AITuningAnalysisModal({ visible, onClose, data }: ModalP
       await createCarAPI(payload,token)
 
       Alert.alert("Sucesso!", "Seu projeto está salvo na garagem!")
-      onClose(); // Fecha o modal e volta pra Home
+      onSaved();
     } catch (error) {
       console.error(error);
       Alert.alert("Erro", "Não foi possível salvar na garagem.");
