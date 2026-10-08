@@ -2,7 +2,7 @@
   "expo": {
     "name": "TuneLab",
     "slug": "TuneLab",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "tunelab",
@@ -47,7 +47,8 @@
       "@react-native-firebase/app",
       "@react-native-firebase/crashlytics",
       "expo-build-properties",
-      "expo-font"
+      "expo-font",
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true,

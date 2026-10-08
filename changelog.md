@@ -1,38 +1,65 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+Todas as mudanças relevantes deste projeto são registradas neste arquivo.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/)
+e o projeto adota o [Versionamento Semântico](https://semver.org/lang/pt-BR/spec/v2.0.0.html).
+Enquanto estiver em 0.x, o app ainda está em desenvolvimento e a API interna pode mudar sem aviso.
 
-## [Unreleased]
-- Ongoing changes before closing a new release.
+## [Não lançado]
+- Mudanças em andamento antes de fechar uma nova versão.
+
+## [0.3.0] - 2026-10-07
+Análise do carro por IA, de ponta a ponta.
+
+### Adicionado
+- Análise por IA: o usuário envia até 4 fotos (frente, lateral, traseira e motor), informa o carro e o objetivo, e recebe um setup com peças de performance, itens visuais, custo estimado, potência e uma linha do tempo de instalação.
+- Campo opcional "Qual é o seu carro?" (marca, modelo e ano), que deixa as sugestões mais precisas.
+- País do usuário lido do idioma do aparelho, para a IA considerar peças e preços do mercado local.
+- Tela de resultado com as abas Performance, Visual e Setup Completo, e aviso de que peças, preços e ganhos são estimativas.
+- Salvar o setup na garagem, com edição e exclusão dos carros salvos.
+- Créditos de análise: selo com o saldo na Home e botão para atualizar a garagem e os créditos.
+- Aviso quando as fotos parecem ser de outro carro, com as opções "Corrigir" e "Analisar mesmo assim".
+- Tela de carregamento durante a análise.
+
+### Alterado
+- A IA passou a usar busca na web para fundamentar peças, preços e o motor da versão vendida no país do dono.
+- Títulos e textos de ganho do setup ficaram padronizados (ex: "+5 hp · Resposta mais rápida do acelerador").
+- Ao salvar um setup na garagem, o formulário de análise é limpo e o app volta para a Home.
+
+### Corrigido
+- Uma análise podia reaproveitar as fotos e o nome do carro da análise anterior.
+- Somas de potência e custo que não batiam com os itens do setup.
+- Ganhos de potência exagerados ou atribuídos a itens de manutenção (velas, filtros, fluidos).
+- Motor e potência original errados quando o modelo usa outro motor no Brasil (ex: BMW 320i 2010).
+
+### Segurança
+- O crédito é reservado antes da análise e devolvido se ela falhar, o que impede usar o mesmo crédito em análises simultâneas.
+- As fotos no Storage não podem mais ser listadas nem enviadas diretamente pelo app; só a API grava.
+- O texto digitado pelo usuário é limpo antes de chegar à IA.
 
 ## [0.2.0] - 2026-08-28
-### Added
-- Montserrat fonts for better visibility.
-- Registration, login, home, and profile screens set up with a provisional UI
-- Email and password authentication added using Firebase Auth.
-- Firebase Storage added for future image storage.
-- Lucide React Native icon library
-- Take a picture of the car: You can take a picture of your car, add a description, and keep it saved in your account for future analysis of this feature!
+### Adicionado
+- Fontes Montserrat, para melhor legibilidade.
+- Telas de cadastro, login, Home e perfil com interface provisória.
+- Autenticação por e-mail e senha com o Firebase Auth.
+- Firebase Storage, para guardar imagens no futuro.
+- Biblioteca de ícones Lucide React Native.
+- Foto do carro: o usuário tira uma foto, adiciona uma descrição e a mantém salva na conta para análises futuras.
 
-### Changed
-- UI of the Login, Register, Home, and Profile screens improved, faithful to the proposed design.
-- Colors and fonts organized into a folder with separate files
-### Deprecated
+### Alterado
+- Interface das telas de login, cadastro, Home e perfil melhorada, fiel ao design proposto.
+- Cores e fontes organizadas em uma pasta, com arquivos separados.
 
-### Removed
+### Corrigido
+- Fontes Montserrat que não eram exibidas corretamente.
+- Erros de cadastro e login que ficavam escondidos agora aparecem para o usuário.
 
-### Fixed
-- Montserrat fonts were not displaying correctly.
-- Registration and login errors that were previously hidden are now visible to users.
-
-### Security
-- Implemented secure authentication using JSON Web Tokens (JWT)
+### Segurança
+- Autenticação segura com JSON Web Tokens (JWT).
 
 ## [0.1.0] - 2026-08-18
-### Added
-- Initial structure set up
-- Registration, login, home, and profile screens set up with a provisional UI
-- Screen navigation implemented
+### Adicionado
+- Estrutura inicial do projeto.
+- Telas de cadastro, login, Home e perfil com interface provisória.
+- Navegação entre telas.

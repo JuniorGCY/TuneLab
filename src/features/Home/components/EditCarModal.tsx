@@ -29,7 +29,6 @@ export default function EditCarModal({ visible, car, onClose, onSave }: EditCarM
     const handleSave = async () => {
         if (!car) return;
         
-        // Validação básica de segurança e UX
         if (!titulo.trim()) {
             alert('O título não pode estar vazio.');
             return;
@@ -37,7 +36,6 @@ export default function EditCarModal({ visible, car, onClose, onSave }: EditCarM
 
         setIsLoading(true);
         try {
-            // Converte o HP de volta para número, garantindo que não quebre a API
             const hpNumber = parseInt(hp, 10) || 0;
             await onSave(car.id, titulo, descricao, hpNumber);
             onClose();
