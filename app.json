@@ -2,7 +2,7 @@
   "expo": {
     "name": "TuneLab",
     "slug": "TuneLab",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "tunelab",
@@ -46,6 +46,7 @@
       ],
       "@react-native-firebase/app",
       "@react-native-firebase/crashlytics",
+      "@react-native-google-signin/google-signin",
       "expo-build-properties",
       "expo-font",
       "expo-localization"

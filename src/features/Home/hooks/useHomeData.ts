@@ -14,6 +14,7 @@ export function useHomeData() {
   const [carsStatus, setCarsStatus] = useState<CarsStatus>('loading');
   // null = ainda não carregou ou falhou: o selo mostra "—" em vez de um número errado.
   const [creditos, setCreditos] = useState<number | null>(null);
+  const [bonusDisponivel, setBonusDisponivel] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const emAndamento = useRef(false);
 
@@ -43,7 +44,8 @@ export function useHomeData() {
       }
 
       if (resultadoCreditos.status === 'fulfilled') {
-        setCreditos(resultadoCreditos.value);
+        setCreditos(resultadoCreditos.value.creditos);
+        setBonusDisponivel(resultadoCreditos.value.bonusDisponivel);
       } else {
         console.error('Erro ao carregar créditos:', resultadoCreditos.reason);
       }
@@ -63,5 +65,5 @@ export function useHomeData() {
     }, [refresh])
   );
 
-  return { carros, carsStatus, creditos, isRefreshing, refresh };
+  return { carros, carsStatus, creditos, bonusDisponivel, isRefreshing, refresh };
 }

@@ -13,6 +13,18 @@ export class VehicleMismatchError extends Error {
   }
 }
 
+// O backend respondeu 402: a conta não tem crédito. A tela oferece a análise grátis do celular.
+export class NoCreditsError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'NoCreditsError';
+  }
+}
+
+export function isNoCreditsError(error: unknown): error is NoCreditsError {
+  return error instanceof Error && error.name === 'NoCreditsError';
+}
+
 // Guard por nome em vez de instanceof: subclasses de Error podem perder o protótipo
 // dependendo de como o Babel transpila as classes.
 export function isVehicleMismatchError(error: unknown): error is VehicleMismatchError {
@@ -94,6 +106,10 @@ export async function uploadMultipleToCoreAPI(
 
     if (response.status === 409 && data.codigo === 'veiculo_divergente') {
       throw new VehicleMismatchError(data.error, data.veiculoNasFotos ?? '');
+    }
+
+    if (response.status === 402) {
+      throw new NoCreditsError(data.error || 'Você não tem créditos de análise disponíveis.');
     }
 
     if (!response.ok) {

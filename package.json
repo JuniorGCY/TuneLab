@@ -1,7 +1,7 @@
 {
   "name": "tunelab",
   "main": "expo-router/entry",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "dependencies": {
     "@expo-google-fonts/montserrat": "^0.4.2",
     "@expo/ui": "~57.0.9",
@@ -10,6 +10,7 @@
     "@react-native-firebase/auth": "^26.3.2",
     "@react-native-firebase/crashlytics": "^26.3.2",
     "@react-native-firebase/firestore": "^26.3.2",
+    "@react-native-google-signin/google-signin": "^16.1.5",
     "expo": "~57.0.11",
     "expo-build-properties": "~57.0.12",
     "expo-camera": "~57.0.4",
