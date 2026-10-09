@@ -7,7 +7,7 @@ import { CarFront, Car, Cpu, Upload, X } from "lucide-react-native";
 import { useRouter } from "expo-router";
 
 import { useAuth } from '@/contexts/AuthContext';
-import { isVehicleMismatchError, uploadMultipleToCoreAPI } from '@/features/Home/services/uploadToCoreAPI';
+import { isNoCreditsError, isVehicleMismatchError, uploadMultipleToCoreAPI } from '@/features/Home/services/uploadToCoreAPI';
 import AITuningAnalysisModal from "@/features/ai-turning/components/AITuningAnalysisModal";
 import { UploadResponse } from "@/features/Home/types/UploadResponse";
 import CameraScreen from "@/features/analysis/components/CameraView";
@@ -109,6 +109,14 @@ export default function Analysis() {
                 Alert.alert("Confira o carro", error.message, [
                     { text: "Corrigir", style: "cancel" },
                     { text: "Analisar mesmo assim", onPress: () => runAnalysis(true) },
+                ]);
+                return;
+            }
+            if (isNoCreditsError(error)) {
+                // Se a conta já usou o bônus, a tela do celular só informa isso, sem enviar SMS.
+                Alert.alert("Sem créditos", error.message, [
+                    { text: "Agora não", style: "cancel" },
+                    { text: "Ganhar análise grátis", onPress: () => router.push('/verify-phone') },
                 ]);
                 return;
             }

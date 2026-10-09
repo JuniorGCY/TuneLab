@@ -3,10 +3,12 @@ import { View, Text, StyleSheet, FlatList, Dimensions, Alert, ActivityIndicator,
 import { RFValue } from "react-native-responsive-fontsize";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RefreshCw } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
 
 import CardCarUser from "@/features/Home/components/CardCarUser";
 import CardSuggestionsUser from "@/features/Home/components/CardSuggestionsUser";
 import { CreditsBadge } from '@/features/Home/components/CreditsBadge';
+import { PhoneBonusBanner } from '@/features/Home/components/PhoneBonusBanner';
 import { useHomeData } from '@/features/Home/hooks/useHomeData';
 import { colors } from "@/constants/colors";
 import { FONTS } from "@/constants/fonts";
@@ -26,7 +28,8 @@ const TestCard2 = [
 export default function HomeScreen() {
     const { getToken } = useAuth();
     const insets = useSafeAreaInsets();
-    const { carros, carsStatus, creditos, isRefreshing, refresh } = useHomeData();
+    const router = useRouter();
+    const { carros, carsStatus, creditos, bonusDisponivel, isRefreshing, refresh } = useHomeData();
     const [selectedCar, setSelectedCar] = useState<CarroAPI | null>(null);
     const [modalVisible, setModalVisible] = useState(false);
     const [editModalVisible, setEditModalVisible] = useState(false);
@@ -120,6 +123,8 @@ export default function HomeScreen() {
             <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
                 <CreditsBadge creditos={creditos} />
             </View>
+
+            {bonusDisponivel && <PhoneBonusBanner onPress={() => router.push('/verify-phone')} />}
 
             <View style={styles.flatListViewCars}>
                 <View style={styles.sectionHeader}>

@@ -9,6 +9,27 @@ Enquanto estiver em 0.x, o app ainda está em desenvolvimento e a API interna po
 ## [Não lançado]
 - Mudanças em andamento antes de fechar uma nova versão.
 
+## [0.4.0] - 2026-10-09
+Login com Google e análise grátis por celular verificado.
+
+### Adicionado
+- Login com Google. Sair do app também sai da conta Google, para o próximo login perguntar qual conta usar.
+- Análise grátis: ao confirmar o celular por SMS, a conta ganha 1 análise. O convite aparece como banner na Home.
+- Tela de confirmação do celular, com máscara de número, código de 6 dígitos, reenvio após 60 segundos e opção de trocar o número.
+- Quando faltam créditos na análise, o alerta leva direto para a tela de liberar a análise grátis.
+
+### Alterado
+- Conta nova começa com 0 créditos; a análise grátis vem do celular verificado.
+- Mensagens de erro de login e de SMS traduzidas para o usuário (código errado, código expirado, muitas tentativas, celular já usado em outra conta, entre outras).
+
+### Removido
+- Cadastro e login por e-mail e senha.
+
+### Segurança
+- Cada celular libera a análise grátis uma única vez, mesmo em contas diferentes ou depois de apagar a conta.
+- O número do celular não é guardado no banco: a API guarda só um código protegido por segredo (HMAC), que serve para saber se o número já foi usado.
+- O celular, o nome e o e-mail gravados pela API vêm do token do Firebase, nunca do que o app envia. Contas sem e-mail verificado não são sincronizadas.
+
 ## [0.3.0] - 2026-10-07
 Análise do carro por IA, de ponta a ponta.
 
