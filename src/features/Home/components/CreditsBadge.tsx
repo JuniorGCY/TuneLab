@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { Zap } from 'lucide-react-native';
+import { Pressable, Text, StyleSheet } from 'react-native';
+import { Plus, Zap } from 'lucide-react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
 
 import { colors } from '@/constants/colors';
@@ -9,6 +9,8 @@ import { FONTS } from '@/constants/fonts';
 type CreditsBadgeProps = {
   // null = saldo ainda não carregado ou indisponível.
   creditos: number | null;
+  // Abre a compra de análises.
+  onPress: () => void;
 };
 
 const rotuloDosCreditos = (creditos: number | null): string => {
@@ -17,22 +19,25 @@ const rotuloDosCreditos = (creditos: number | null): string => {
   return creditos === 1 ? '1 crédito' : `${creditos} créditos`;
 };
 
-export const CreditsBadge = ({ creditos }: CreditsBadgeProps) => {
+export const CreditsBadge = ({ creditos, onPress }: CreditsBadgeProps) => {
   const semCreditos = creditos === 0;
   const rotulo = rotuloDosCreditos(creditos);
+  const saldoFalado =
+    creditos === null ? 'Créditos de análise indisponíveis' : `Você tem ${rotulo} de análise`;
 
   return (
-    <View
-      style={[styles.badge, semCreditos && styles.badgeEmpty]}
-      accessible
-      accessibilityRole="text"
-      accessibilityLabel={
-        creditos === null ? 'Créditos de análise indisponíveis' : `Você tem ${rotulo} de análise`
-      }
+    <Pressable
+      onPress={onPress}
+      hitSlop={8}
+      style={({ pressed }) => [styles.badge, semCreditos && styles.badgeEmpty, pressed && styles.pressed]}
+      accessibilityRole="button"
+      accessibilityLabel={saldoFalado}
+      accessibilityHint="Abre a compra de análises"
     >
       <Zap size={RFValue(12)} color={semCreditos ? '#AAAAAA' : colors.primary} />
       <Text style={[styles.text, semCreditos && styles.textEmpty]}>{rotulo}</Text>
-    </View>
+      <Plus size={RFValue(12)} color={colors.primary} />
+    </Pressable>
   );
 };
 
@@ -41,6 +46,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    minHeight: 32,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 999,
@@ -50,7 +56,11 @@ const styles = StyleSheet.create({
   },
   badgeEmpty: {
     backgroundColor: '#1E1E1E',
-    borderColor: '#333333',
+    borderColor: colors.primary,
+  },
+  pressed: {
+    opacity: 0.8,
+    transform: [{ scale: 0.96 }],
   },
   text: {
     color: colors.primary,

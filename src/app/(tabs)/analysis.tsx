@@ -116,7 +116,8 @@ export default function Analysis() {
                 // Se a conta já usou o bônus, a tela do celular só informa isso, sem enviar SMS.
                 Alert.alert("Sem créditos", error.message, [
                     { text: "Agora não", style: "cancel" },
-                    { text: "Ganhar análise grátis", onPress: () => router.push('/verify-phone') },
+                    { text: "Análise grátis", onPress: () => router.push('/verify-phone') },
+                    { text: "Comprar análises", onPress: () => router.push('/buy-credits') },
                 ]);
                 return;
             }

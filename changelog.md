@@ -7,7 +7,19 @@ e o projeto adota o [Versionamento Semântico](https://semver.org/lang/pt-BR/spe
 Enquanto estiver em 0.x, o app ainda está em desenvolvimento e a API interna pode mudar sem aviso.
 
 ## [Não lançado]
-- Mudanças em andamento antes de fechar uma nova versão.
+
+## [0.5.0] - 2026-10-11
+Compra de análises pela Google Play (RevenueCat).
+
+### Adicionado
+- Compra de análises pela Google Play, com pacotes de 1, 5 e 15 créditos. A tela mostra o preço da loja e quanto sai cada análise, com destaque para o pacote de 5.
+- A tela de compra abre pelo selo de créditos da Home e pelo alerta de "Sem créditos" na análise.
+- Depois do pagamento, o app espera o servidor confirmar e mostra o saldo novo. Se demorar, avisa que os créditos estão a caminho; pagamento pendente na Google Play também tem aviso próprio.
+- Testes automáticos (Jest) para as regras da compra.
+
+### Segurança
+- Os créditos comprados são liberados só pelo servidor, depois que o RevenueCat confirma o pagamento. O app nunca soma créditos por conta própria.
+- A compra fica sempre ligada à conta logada (UID do Firebase), conferida antes de abrir a loja, e um toque duplo não gera duas cobranças.
 
 ## [0.4.0] - 2026-10-09
 Login com Google e análise grátis por celular verificado.

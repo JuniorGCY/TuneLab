@@ -121,7 +121,7 @@ export default function HomeScreen() {
     return (
         <View style={styles.container}>
             <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
-                <CreditsBadge creditos={creditos} />
+                <CreditsBadge creditos={creditos} onPress={() => router.push('/buy-credits')} />
             </View>
 
             {bonusDisponivel && <PhoneBonusBanner onPress={() => router.push('/verify-phone')} />}
