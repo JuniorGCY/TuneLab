@@ -47,6 +47,7 @@ function RootLayoutNav() {
       <Stack.Screen name="(auth)" />
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="verify-phone" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="buy-credits" options={{ presentation: 'modal' }} />
     </Stack>
   );
 }
@@ -75,4 +76,4 @@ export default function RootLayout() {
       <RootLayoutNav />
     </AuthProvider>
   );
-}
+}
