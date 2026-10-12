@@ -48,6 +48,7 @@ function RootLayoutNav() {
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="verify-phone" options={{ presentation: 'modal' }} />
       <Stack.Screen name="buy-credits" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="delete-account" options={{ presentation: 'modal' }} />
     </Stack>
   );
 }

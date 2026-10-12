@@ -2,6 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useState } fr
 import {
   getAuth,
   onAuthStateChanged,
+  reauthenticateWithCredential,
   signInWithCredential,
   signOut,
   GoogleAuthProvider,
@@ -27,7 +28,11 @@ interface AuthContextData {
   isLoading: boolean;
   getToken: (forceRefresh?: boolean) => Promise<string | null>;
   signInWithGoogle: () => Promise<GoogleSignInResult>;
+  // Confirma de novo a mesma conta Google. Usado antes de ações sem volta (excluir a conta).
+  reauthenticateWithGoogle: () => Promise<GoogleSignInResult>;
   logout: () => Promise<void>;
+  // Depois que a API excluiu a conta: revoga o acesso ao Google e limpa a sessão local.
+  clearSessionAfterAccountDeletion: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
@@ -124,6 +129,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return 'signed-in';
   }, []);
 
+  // A API só exclui a conta com um login de poucos minutos atrás (claim auth_time do token).
+  // O reauthenticate renova esse horário sem trocar de usuário; outra conta Google dá
+  // auth/user-mismatch. Depois daqui, use getToken(true) para pegar o token novo.
+  const reauthenticateWithGoogle = useCallback(async (): Promise<GoogleSignInResult> => {
+    const currentUser = getAuth().currentUser;
+    if (!currentUser) throw new Error('Sua sessão expirou. Entre de novo.');
+
+    await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+    const resposta = await GoogleSignin.signIn();
+    if (!isSuccessResponse(resposta)) return 'cancelled';
+
+    const { idToken } = resposta.data;
+    if (!idToken) {
+      throw new Error('O Google não devolveu o idToken. Confira EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID.');
+    }
+
+    await reauthenticateWithCredential(currentUser, GoogleAuthProvider.credential(idToken));
+    return 'signed-in';
+  }, []);
+
   const logout = useCallback(async () => {
     await signOut(getAuth());
     // Sem isso, o próximo "Entrar com Google" reaproveita a conta anterior sem perguntar.
@@ -134,9 +159,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const clearSessionAfterAccountDeletion = useCallback(async () => {
+    // Tira a permissão do TuneLab na conta Google; o próximo login pede autorização de novo.
+    try {
+      await GoogleSignin.revokeAccess();
+    } catch (error) {
+      console.warn('Falha ao revogar o acesso ao Google:', error);
+    }
+    await logout();
+  }, [logout]);
+
   return (
     <AuthContext.Provider
-      value={{ firebaseUser, dbUser, isLoading, getToken, signInWithGoogle, logout }}
+      value={{
+        firebaseUser,
+        dbUser,
+        isLoading,
+        getToken,
+        signInWithGoogle,
+        reauthenticateWithGoogle,
+        logout,
+        clearSessionAfterAccountDeletion,
+      }}
     >
       {children}
     </AuthContext.Provider>
