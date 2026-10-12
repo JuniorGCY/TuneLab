@@ -40,6 +40,12 @@ export function getFirebaseErrorMessage(erroCode: string): string {
         case 'auth/app-not-authorized':
           return 'Não conseguimos verificar o app para enviar o SMS. Atualize o TuneLab pela Play Store e tente de novo.';
 
+        // Reautenticação antes de excluir a conta
+        case 'auth/user-mismatch':
+          return 'Escolha a mesma conta Google que você usa no TuneLab.';
+        case 'auth/requires-recent-login':
+          return 'Por segurança, entre de novo com o Google e tente outra vez.';
+
         case 'auth/network-request-failed':
           return 'Sem conexão com a internet. Verifique sua rede.';
         default:

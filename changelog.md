@@ -8,6 +8,21 @@ Enquanto estiver em 0.x, o app ainda está em desenvolvimento e a API interna po
 
 ## [Não lançado]
 
+## [0.6.0] - 2026-10-12
+Exclusão de conta e fotos privadas.
+
+### Adicionado
+- Excluir conta, no fim da tela de Perfil. A tela mostra o que será apagado e o que fica guardado, avisa sobre análises não usadas, pede para digitar EXCLUIR e para entrar com o Google mais uma vez antes de apagar.
+
+### Removido
+- Permissões de microfone e de leitor de código de barras, que o app não usa.
+- Biblioteca do Firestore, que não era usada.
+
+### Segurança
+- A exclusão apaga fotos, carros, saldo e o login (com o celular vinculado). Ficam só o histórico de compras e o código cifrado do celular, como diz a Política de Privacidade.
+- A API só exclui a conta com um login de poucos minutos atrás.
+- Fotos novas ficam numa pasta do próprio usuário e só abrem pelo link com token que a API devolve.
+
 ## [0.5.0] - 2026-10-11
 Compra de análises pela Google Play (RevenueCat).
 

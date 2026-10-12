@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView } from 'react-native';
+import { useRouter } from 'expo-router';
 import { FONTS } from "@/constants/fonts";
 import { colors } from "@/constants/colors";
 import { useAuth } from '../../contexts/AuthContext';
@@ -14,7 +15,8 @@ import {
     Headphones, 
     FileText, 
     LogOut, 
-    ChevronRight 
+    ChevronRight,
+    Trash2
 } from 'lucide-react-native';
 
 const { width } = Dimensions.get('window');
@@ -33,6 +35,7 @@ const MenuItem = ({ icon: Icon, title, onPress }: any) => (
 );
 
 export default function ProfileScreen() {
+    const router = useRouter();
     const { logout } = useAuth();
     const handleLogout = async () => {
         try {
@@ -74,6 +77,18 @@ export default function ProfileScreen() {
                     
                     <MenuItem icon={LogOut} title="Sair" onPress={handleLogout} />
                 </View>
+
+                <TouchableOpacity
+                    style={styles.deleteAccount}
+                    onPress={() => router.push('/delete-account')}
+                    activeOpacity={0.7}
+                    accessibilityRole="button"
+                    accessibilityLabel="Excluir conta"
+                    hitSlop={8}
+                >
+                    <Trash2 size={18} color="#FF6B6B" />
+                    <Text style={styles.deleteAccountText}>Excluir conta</Text>
+                </TouchableOpacity>
             </View>
         </ScrollView>
     );
@@ -157,5 +172,20 @@ const styles = StyleSheet.create({
         fontSize: RFValue(14),
         fontFamily: FONTS.Montserrat.regular,
         color: '#FFF',
+    },
+    // Fora do menu e discreto: ação sem volta não fica ao lado das opções do dia a dia.
+    deleteAccount: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+        minHeight: 44,
+        marginHorizontal: 20,
+        marginBottom: 24,
+    },
+    deleteAccountText: {
+        fontSize: RFValue(13),
+        fontFamily: FONTS.Montserrat.regular,
+        color: '#FF6B6B',
     }
 });
