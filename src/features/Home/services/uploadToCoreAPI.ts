@@ -1,35 +1,14 @@
 import * as Localization from 'expo-localization';
 import { UploadResponse } from "../types/UploadResponse";
+import { uploadErrorFromResponse } from "../utils/uploadErrors";
 
-// O backend respondeu 409 porque as fotos não parecem ser do carro digitado. Nenhum crédito
-// foi gasto; a tela pode oferecer "Analisar mesmo assim" (confirmVehicle: true).
-export class VehicleMismatchError extends Error {
-  readonly vehicleInPhotos: string;
-
-  constructor(message: string, vehicleInPhotos: string) {
-    super(message);
-    this.name = 'VehicleMismatchError';
-    this.vehicleInPhotos = vehicleInPhotos;
-  }
-}
-
-// O backend respondeu 402: a conta não tem crédito. A tela oferece a análise grátis do celular.
-export class NoCreditsError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'NoCreditsError';
-  }
-}
-
-export function isNoCreditsError(error: unknown): error is NoCreditsError {
-  return error instanceof Error && error.name === 'NoCreditsError';
-}
-
-// Guard por nome em vez de instanceof: subclasses de Error podem perder o protótipo
-// dependendo de como o Babel transpila as classes.
-export function isVehicleMismatchError(error: unknown): error is VehicleMismatchError {
-  return error instanceof Error && error.name === 'VehicleMismatchError';
-}
+// Reexporta para a tela de análise continuar importando daqui.
+export {
+  isNoCreditsError,
+  isVehicleMismatchError,
+  NoCreditsError,
+  VehicleMismatchError,
+} from "../utils/uploadErrors";
 
 type UploadOptions = {
   // Pula a checagem "fotos x carro digitado" depois que o usuário confirmou.
@@ -104,16 +83,9 @@ export async function uploadMultipleToCoreAPI(
       throw new Error(text || `Resposta inválida (status ${response.status})`);
     }
 
-    if (response.status === 409 && data.codigo === 'veiculo_divergente') {
-      throw new VehicleMismatchError(data.error, data.veiculoNasFotos ?? '');
-    }
-
-    if (response.status === 402) {
-      throw new NoCreditsError(data.error || 'Você não tem créditos de análise disponíveis.');
-    }
-
     if (!response.ok) {
-      throw new Error(data.message || data.error || `Erro HTTP ${response.status}`);
+      // 409 (carro diferente), 429 (limite de tentativas), 402 (sem crédito) e o resto.
+      throw uploadErrorFromResponse(response.status, data);
     }
 
     if (!data.ai_setup) {
