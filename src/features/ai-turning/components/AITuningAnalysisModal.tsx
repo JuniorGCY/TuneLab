@@ -119,6 +119,16 @@ export default function AITuningAnalysisModal({ visible, onClose, onSaved, data 
                 <View style={styles.badge}>
                   <Text style={styles.badgeText}>Powered by TuneLab AI</Text>
                 </View>
+                {/* A foto tunada é gerada por IA: pode mostrar peças que não existem ou não servem no carro. */}
+                {heroImageUri === imagemModificadaUrl && temImagemModificada && (
+                  <View
+                    style={styles.badge}
+                    accessible
+                    accessibilityLabel="Imagem gerada por inteligência artificial, apenas ilustrativa"
+                  >
+                    <Text style={styles.badgeText}>Simulação por IA · ilustrativa</Text>
+                  </View>
+                )}
               </View>
             </View>
           </ImageBackground>
@@ -230,7 +240,9 @@ const styles = StyleSheet.create({
   },
   badgesRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
+    gap: 8,
   },
   badge: {
     backgroundColor: 'rgba(255, 107, 0, 0.15)',

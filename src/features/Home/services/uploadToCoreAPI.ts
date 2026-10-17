@@ -1,6 +1,7 @@
 import * as Localization from 'expo-localization';
 import { UploadResponse } from "../types/UploadResponse";
 import { uploadErrorFromResponse } from "../utils/uploadErrors";
+import { prepararFotosParaEnvio } from "./prepareImagesForUpload";
 
 // Reexporta para a tela de análise continuar importando daqui.
 export {
@@ -54,9 +55,13 @@ export async function uploadMultipleToCoreAPI(
       formData.append('pais', regiao);
     }
 
-    // 2. O Padrão Moderno (Blob): Lemos a URI local e convertemos em arquivo real!
-    for (let i = 0; i < imageUris.length; i++) {
-      const uri = imageUris[i];
+    // 2. Reduz as fotos grandes para 1600 px antes de enviar (envio mais rápido e com menos
+    // dados móveis; a API reduz para 1200 px de qualquer jeito).
+    const fotos = await prepararFotosParaEnvio(imageUris);
+
+    // 3. O Padrão Moderno (Blob): Lemos a URI local e convertemos em arquivo real!
+    for (let i = 0; i < fotos.length; i++) {
+      const uri = fotos[i];
 
       // Lemos o arquivo da memória do celular
       const fileResponse = await fetch(uri);
