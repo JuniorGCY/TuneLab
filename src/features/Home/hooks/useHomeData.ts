@@ -9,7 +9,8 @@ import { getCreditsAPI } from '@/features/Home/services/getCreditsAPI';
 type CarsStatus = 'loading' | 'ready' | 'error';
 
 export function useHomeData() {
-  const { getToken } = useAuth();
+  const { getToken, firebaseUser } = useAuth();
+  const uid = firebaseUser?.uid ?? null;
   const [carros, setCarros] = useState<CarroAPI[]>([]);
   const [carsStatus, setCarsStatus] = useState<CarsStatus>('loading');
   // null = ainda não carregou ou falhou: o selo mostra "—" em vez de um número errado.
@@ -19,6 +20,9 @@ export function useHomeData() {
   const emAndamento = useRef(false);
 
   const refresh = useCallback(async () => {
+    // Sessão ainda não carregou (ou logout): espera. Quando o uid mudar,
+    // o refresh é recriado e o useFocusEffect busca de novo sozinho.
+    if (!uid) return;
     // Evita duas buscas simultâneas (foco + toque no botão ao mesmo tempo).
     if (emAndamento.current) return;
     emAndamento.current = true;
@@ -56,7 +60,7 @@ export function useHomeData() {
       emAndamento.current = false;
       setIsRefreshing(false);
     }
-  }, [getToken]);
+  }, [getToken, uid]);
 
   // Atualiza sempre que a tela ganha foco: ao voltar da análise, o carro salvo já aparece.
   useFocusEffect(
