@@ -8,6 +8,28 @@ Enquanto estiver em 0.x, o app ainda está em desenvolvimento e a API interna po
 
 ## [Não lançado]
 
+## [0.7.0] - 2026-10-17
+Fotos menores no envio, limite de tentativas e foto tunada como simulação.
+
+### Adicionado
+- As fotos são reduzidas para 1600 px no próprio celular antes do envio. A análise começa mais rápido e gasta bem menos dados móveis; se a redução falhar, a foto original segue normalmente.
+- Quando a conferência "fotos x carro" recusa muitas vezes no dia, o app mostra o aviso e mantém a opção "Analisar mesmo assim" (usa 1 crédito).
+- Selo "Simulação por IA · ilustrativa" sobre a foto tunada, quando a imagem gerada por IA estiver na tela.
+
+### Alterado
+- Mensagens claras quando a análise é limitada (muitas tentativas na última hora) ou quando uma foto é grande demais. Nenhum crédito é usado nesses casos.
+
+### Removido
+- Seção "Sugestões para você" da Home, que mostrava dados de exemplo fixos.
+- Tela de exemplo `explore` que veio do template do Expo.
+
+### Corrigido
+- O cronograma do resultado não quebra mais quando a IA não manda as fases.
+- Tipos dos cards do resultado (`tsc` sem erros).
+
+### Segurança
+- Logs com o texto do usuário e a resposta da IA só aparecem em desenvolvimento, não no app instalado.
+
 ## [0.6.0] - 2026-10-12
 Exclusão de conta e fotos privadas.
 
