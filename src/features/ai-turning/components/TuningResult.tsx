@@ -33,7 +33,7 @@ export const TuningResult = ({ setupData }: Props) => {
     <View>
       <SetupSummaryCard data={setupData.setup_summary} />
       <PackageItemsCard data={packageDataFormated} />
-      <TimelineCard phases={setupData.timeline} />
+      <TimelineCard phases={timelinePhases} />
     </View>
   );
 };

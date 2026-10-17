@@ -6,7 +6,16 @@ import { RFValue } from 'react-native-responsive-fontsize';
 
 import { Package } from 'lucide-react-native';
 
-export const PackageItemsCard = ({ data }) => {
+export type PackageItemsData = {
+    performanceItems: string[];
+    visualItems: string[];
+};
+
+type PackageItemsCardProps = {
+    data: PackageItemsData;
+};
+
+export const PackageItemsCard = ({ data }: PackageItemsCardProps) => {
     const totalItems = data.performanceItems.length + data.visualItems.length;
     const renderBullet = (text: string, index: number) => (
         <View key={index} style={styles.bulletRow}>

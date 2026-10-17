@@ -5,7 +5,13 @@ import { FONTS } from '@/constants/fonts';
 import { RFValue } from 'react-native-responsive-fontsize'
 import { GitMerge} from 'lucide-react-native';
 
-export const TimelineCard = ({ phases }) => {
+import { TimelinePhase } from '@/features/Home/types/UploadResponse';
+
+type TimelineCardProps = {
+  phases: TimelinePhase[];
+};
+
+export const TimelineCard = ({ phases }: TimelineCardProps) => {
   return (
     <View style={styles.card}>
         <View style={styles.headerIconTitle}>
