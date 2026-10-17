@@ -6,7 +6,6 @@ import { RefreshCw } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 
 import CardCarUser from "@/features/Home/components/CardCarUser";
-import CardSuggestionsUser from "@/features/Home/components/CardSuggestionsUser";
 import { CreditsBadge } from '@/features/Home/components/CreditsBadge';
 import { PhoneBonusBanner } from '@/features/Home/components/PhoneBonusBanner';
 import { useHomeData } from '@/features/Home/hooks/useHomeData';
@@ -20,11 +19,6 @@ import EditCarModal from '@/features/Home/components/EditCarModal';
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.75; 
 
-const TestCard2 = [
-    { id: '1', title: 'Stage 2 Remap', subtitle: '+85 HP'},
-    { id: '2', title: 'Carbon Aero Kit', subtitle: 'Downforce Optimization'},
-];
-
 export default function HomeScreen() {
     const { getToken } = useAuth();
     const insets = useSafeAreaInsets();
@@ -33,10 +27,6 @@ export default function HomeScreen() {
     const [selectedCar, setSelectedCar] = useState<CarroAPI | null>(null);
     const [modalVisible, setModalVisible] = useState(false);
     const [editModalVisible, setEditModalVisible] = useState(false);
-
-    const handleTest2 = () => {
-        Alert.alert("Aviso", "Eu já não disse FUTURAMENTE?!");
-    }
 
     const handleOpenCarDetails = (car: CarroAPI) => {
         setSelectedCar(car);
@@ -163,23 +153,6 @@ export default function HomeScreen() {
                 onClose={() => setEditModalVisible(false)}
                 onSave={handleSaveEdit}
             />
-
-            <View style={styles.flatListViewSuggestions}>
-                <Text style={styles.textsPrimary}>Sugestões para você</Text>
-                <FlatList
-                    data={TestCard2}
-                    keyExtractor={(item) => item.id}
-                    showsVerticalScrollIndicator={false}
-                    contentContainerStyle={styles.scrollContainer}
-                    renderItem={({item }) => (
-                        <CardSuggestionsUser 
-                           title={item.title}
-                           subtitle={item.subtitle}
-                           onPress={handleTest2}
-                        />
-                    )}
-                />
-            </View>
         </View>
     );
 }
@@ -257,8 +230,4 @@ const styles = StyleSheet.create({
         paddingLeft: 20, 
         paddingRight: 40,
     },
-    flatListViewSuggestions: {
-        flex: 1,
-        paddingTop: 40,
-    }
 });

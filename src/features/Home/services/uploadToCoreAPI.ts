@@ -10,6 +10,12 @@ export {
   VehicleMismatchError,
 } from "../utils/uploadErrors";
 
+// Logs só em desenvolvimento: em produção eles iriam para o logcat do aparelho com o texto
+// do usuário e a resposta inteira da IA.
+const logDev = (...args: unknown[]) => {
+  if (__DEV__) console.log(...args);
+};
+
 type UploadOptions = {
   // Pula a checagem "fotos x carro digitado" depois que o usuário confirmou.
   confirmVehicle?: boolean;
@@ -23,8 +29,8 @@ export async function uploadMultipleToCoreAPI(
   options: UploadOptions = {}
 ): Promise<UploadResponse> {
   try {
-    console.log('API URL:', process.env.EXPO_PUBLIC_API_URL);
-    console.log('Enviando imagens:', imageUris.length, 'Objetivo:', objetivo, 'Veículo:', veiculo || '(não informado)');
+    logDev('API URL:', process.env.EXPO_PUBLIC_API_URL);
+    logDev('Enviando imagens:', imageUris.length, 'Objetivo:', objetivo, 'Veículo:', veiculo || '(não informado)');
 
     const formData = new FormData();
 
@@ -62,7 +68,7 @@ export async function uploadMultipleToCoreAPI(
     }
 
     const url = `${process.env.EXPO_PUBLIC_API_URL}/car/upload`;
-    console.log('POST (Batch) →', url);
+    logDev('POST (Batch) →', url);
 
     const response = await fetch(url, {
       method: 'POST',
@@ -74,7 +80,7 @@ export async function uploadMultipleToCoreAPI(
     });
 
     const text = await response.text();
-    console.log('Resposta bruta da IA:', text);
+    logDev('Resposta bruta da IA:', text);
 
     let data: any;
     try {
@@ -95,7 +101,7 @@ export async function uploadMultipleToCoreAPI(
     return data as UploadResponse;
 
   } catch (err: any) {
-    console.log('uploadMultipleToCoreAPI error:', err);
+    logDev('uploadMultipleToCoreAPI error:', err);
     throw err;
   }
 }
