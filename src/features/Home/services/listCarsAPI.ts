@@ -8,6 +8,8 @@ export interface CarroAPI {
   descricao: string;
   hp: number;
   imageUrl: string;
+  // Foto do carro com o setup visual aplicado pela IA. Ausente quando a imagem não foi gerada.
+  imagemModificadaUrl?: string;
 }
 
 export async function listCarsAPI(userToken: string): Promise<CarroAPI[]> {

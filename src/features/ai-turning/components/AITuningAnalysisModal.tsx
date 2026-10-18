@@ -23,6 +23,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Alert, ActivityIndicator } from 'react-native';
 
 import { UploadResponse } from '@/features/Home/types/UploadResponse';
+import { carTitleFromSetup } from '@/features/Home/utils/garageCar';
 
 interface ModalProps {
   visible: boolean;
@@ -64,7 +65,7 @@ export default function AITuningAnalysisModal({ visible, onClose, onSaved, data 
       if (!token) throw new Error("Não autenticado");
 
       const payload = {
-        titulo: "Projeto Tuning IA", // Ou pegue o modelo que a IA retornou
+        titulo: carTitleFromSetup(ai_setup.setup_summary.title),
         descricao: ai_setup.setup_summary.powerGain + " - " + ai_setup.setup_summary.estimatedCost,
         hp: parseInt(ai_setup.setup_summary.totalPower) || 0,
         imageUrl: imageUrl, // A URL que o Go retornou
@@ -119,6 +120,16 @@ export default function AITuningAnalysisModal({ visible, onClose, onSaved, data 
                 <View style={styles.badge}>
                   <Text style={styles.badgeText}>Powered by TuneLab AI</Text>
                 </View>
+                {/* A foto tunada é gerada por IA: pode mostrar peças que não existem ou não servem no carro. */}
+                {heroImageUri === imagemModificadaUrl && temImagemModificada && (
+                  <View
+                    style={styles.badge}
+                    accessible
+                    accessibilityLabel="Imagem gerada por inteligência artificial, apenas ilustrativa"
+                  >
+                    <Text style={styles.badgeText}>Simulação por IA · ilustrativa</Text>
+                  </View>
+                )}
               </View>
             </View>
           </ImageBackground>
@@ -230,7 +241,9 @@ const styles = StyleSheet.create({
   },
   badgesRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
+    gap: 8,
   },
   badge: {
     backgroundColor: 'rgba(255, 107, 0, 0.15)',
