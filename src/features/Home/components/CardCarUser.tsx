@@ -8,9 +8,15 @@ import { FONTS } from '@/constants/fonts';
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.75;
 
-export default function CardCarUser({ title, subtitle, hp, imageUrl, onPress }: CardCarUserProps) {
+export default function CardCarUser({ title, subtitle, hp, imageUrl, isAiSimulation, onPress }: CardCarUserProps) {
   return (
-    <Pressable style={styles.card} onPress={onPress}>
+    <Pressable
+      style={styles.card}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${title}, ${subtitle}${hp ? `, ${hp}` : ''}${isAiSimulation ? ', imagem simulada por IA' : ''}`}
+      accessibilityHint="Abre os detalhes do projeto"
+    >
       <Image 
         source={{ uri: imageUrl}}
         style={styles.imageBackground}
@@ -21,6 +27,12 @@ export default function CardCarUser({ title, subtitle, hp, imageUrl, onPress }: 
       />
       
       <View style={styles.overlay} />
+
+      {isAiSimulation && (
+        <View style={styles.aiBadge} importantForAccessibility="no-hide-descendants">
+          <Text style={styles.aiBadgeText}>Simulação IA</Text>
+        </View>
+      )}
 
       <View style={styles.contentContainer}>
         <Text style={styles.title}>{title}</Text>
@@ -65,6 +77,23 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.4)',
+  },
+  aiBadge: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    zIndex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 107, 0, 0.6)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  aiBadgeText: {
+    color: '#FF6B00',
+    fontSize: RFValue(9),
+    fontFamily: FONTS.Montserrat.bold,
   },
   contentContainer: {
     padding: 20,

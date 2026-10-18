@@ -23,6 +23,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Alert, ActivityIndicator } from 'react-native';
 
 import { UploadResponse } from '@/features/Home/types/UploadResponse';
+import { carTitleFromSetup } from '@/features/Home/utils/garageCar';
 
 interface ModalProps {
   visible: boolean;
@@ -64,7 +65,7 @@ export default function AITuningAnalysisModal({ visible, onClose, onSaved, data 
       if (!token) throw new Error("Não autenticado");
 
       const payload = {
-        titulo: "Projeto Tuning IA", // Ou pegue o modelo que a IA retornou
+        titulo: carTitleFromSetup(ai_setup.setup_summary.title),
         descricao: ai_setup.setup_summary.powerGain + " - " + ai_setup.setup_summary.estimatedCost,
         hp: parseInt(ai_setup.setup_summary.totalPower) || 0,
         imageUrl: imageUrl, // A URL que o Go retornou

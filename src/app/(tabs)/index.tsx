@@ -9,6 +9,7 @@ import CardCarUser from "@/features/Home/components/CardCarUser";
 import { CreditsBadge } from '@/features/Home/components/CreditsBadge';
 import { PhoneBonusBanner } from '@/features/Home/components/PhoneBonusBanner';
 import { useHomeData } from '@/features/Home/hooks/useHomeData';
+import { defaultImageMode, imageForMode } from '@/features/Home/utils/garageCar';
 import { colors } from "@/constants/colors";
 import { FONTS } from "@/constants/fonts";
 import { useAuth } from '../../contexts/AuthContext'; 
@@ -100,7 +101,8 @@ export default function HomeScreen() {
                         title={item.titulo} 
                         subtitle={item.descricao} 
                         hp={`${item.hp} hp`}
-                        imageUrl={item.imageUrl}
+                        imageUrl={imageForMode(item, defaultImageMode(item))}
+                        isAiSimulation={defaultImageMode(item) === 'tunada'}
                         onPress={() => handleOpenCarDetails(item)}
                     />
                 )}
