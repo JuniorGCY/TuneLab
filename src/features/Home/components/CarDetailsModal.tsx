@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
         height: '100%',
     },
     imageState: {
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
         justifyContent: 'center',
         alignItems: 'center',
         padding: 16,
