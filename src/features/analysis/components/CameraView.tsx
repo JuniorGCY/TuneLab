@@ -16,9 +16,11 @@ interface CameraScreenProps {
   onClose: () => void;
   // Nova prop: Devolve a URI da foto capturada para a tela pai
   onPictureTaken: (uri: string) => void; 
+  // Dica de enquadramento do ângulo escolhido (ex: "Frente na diagonal...").
+  hint?: string;
 }
 
-export default function CameraScreen({ onClose, onPictureTaken }: CameraScreenProps) {
+export default function CameraScreen({ onClose, onPictureTaken, hint }: CameraScreenProps) {
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const cameraRef = useRef<CameraView | null>(null);
 
@@ -73,9 +75,20 @@ export default function CameraScreen({ onClose, onPictureTaken }: CameraScreenPr
       <CameraView style={StyleSheet.absoluteFill} ref={cameraRef} facing="back" />
 
       <View style={styles.overlay} pointerEvents="box-none">
-        <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+        <TouchableOpacity
+          style={styles.closeButton}
+          onPress={onClose}
+          accessibilityRole="button"
+          accessibilityLabel="Fechar câmera"
+        >
           <Text style={styles.closeButtonText}>✕</Text>
         </TouchableOpacity>
+
+        {hint ? (
+          <View style={styles.hintBox} accessible accessibilityRole="text" accessibilityLabel={`Dica: ${hint}`}>
+            <Text style={styles.hintText}>{hint}</Text>
+          </View>
+        ) : null}
 
         <View style={styles.footerContainer}>
           <TouchableOpacity style={styles.secondaryButton} onPress={pickImageFromGallery}>
@@ -98,6 +111,8 @@ const styles = StyleSheet.create({
   overlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'space-between' },
   closeButton: { position: 'absolute', top: 50, left: 20, width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', zIndex: 10 },
   closeButtonText: { color: '#FFF', fontSize: 22, fontWeight: '600' },
+  hintBox: { position: 'absolute', top: 104, left: 20, right: 20, backgroundColor: 'rgba(0,0,0,0.65)', borderWidth: 1, borderColor: 'rgba(255,107,0,0.6)', borderRadius: 12, paddingVertical: 10, paddingHorizontal: 14 },
+  hintText: { color: '#FFF', fontFamily: FONTS.Montserrat.regular, fontSize: 14, textAlign: 'center' },
   texto: { color: '#FFF', textAlign: 'center', marginBottom: 20, paddingHorizontal: 20 },
   botao: { backgroundColor: colors.primary, padding: 15, borderRadius: 8, alignItems: 'center', marginHorizontal: 20 },
   textoBotao: { color: '#FFF', fontWeight: 'bold', fontFamily: FONTS.Montserrat.regular },

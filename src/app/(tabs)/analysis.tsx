@@ -16,11 +16,13 @@ import AnalysisLoadingOverlay from "@/features/analysis/components/AnalysisLoadi
 const { width } = Dimensions.get('window');
 const button_width = width * 0.75;
 
+// A frente em diagonal (3/4) é a foto que a IA usa, de preferência, para a simulação visual:
+// mostra frente, lateral, rodas e altura ao mesmo tempo. A frente reta escondia quase todo o setup.
 const SCAN_ITEMS = [
-  { id: 0, title: 'Frente', icon: CarFront },
-  { id: 1, title: 'Lateral', icon: Car },
-  { id: 2, title: 'Traseira', icon: CarFront },
-  { id: 3, title: 'Motor', icon: Cpu },
+  { id: 0, title: 'Frente 3/4', icon: CarFront, hint: 'Frente na diagonal: pegue a frente e a lateral do carro inteiro, com as rodas aparecendo.' },
+  { id: 1, title: 'Lateral', icon: Car, hint: 'Lateral inteira, de longe, com as duas rodas no quadro.' },
+  { id: 2, title: 'Traseira 3/4', icon: CarFront, hint: 'Traseira na diagonal: pegue a traseira e a lateral do carro inteiro.' },
+  { id: 3, title: 'Motor', icon: Cpu, hint: 'Cofre do motor aberto, de cima.' },
 ];
 
 export default function Analysis() {
@@ -235,6 +237,7 @@ export default function Analysis() {
             {showCamera && (
                 <View style={StyleSheet.absoluteFill}>
                     <CameraScreen
+                        hint={activeSlotIndex !== null ? SCAN_ITEMS[activeSlotIndex]?.hint : undefined}
                         onClose={() => setShowCamera(false)}
                         onPictureTaken={handlePictureTaken}
                     />
