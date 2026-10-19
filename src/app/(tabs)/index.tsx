@@ -1,123 +1,235 @@
-import { View,Text, StyleSheet, TouchableOpacity, FlatList, Dimensions } from "react-native";
-import { router } from "expo-router";
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, FlatList, Dimensions, Alert, ActivityIndicator, Pressable } from "react-native";
+import { RFValue } from "react-native-responsive-fontsize";
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { RefreshCw } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
 
 import CardCarUser from "@/features/Home/components/CardCarUser";
-import CardSuggestionsUser from "@/features/Home/components/CardSuggestionsUser";
+import { CreditsBadge } from '@/features/Home/components/CreditsBadge';
+import { PhoneBonusBanner } from '@/features/Home/components/PhoneBonusBanner';
+import { useHomeData } from '@/features/Home/hooks/useHomeData';
+import { defaultImageMode, imageForMode } from '@/features/Home/utils/garageCar';
 import { colors } from "@/constants/colors";
+import { FONTS } from "@/constants/fonts";
+import { useAuth } from '../../contexts/AuthContext'; 
+import { CarroAPI, deleteCarAPI, updateCarAPI } from '../../features/Home/services/listCarsAPI'; 
+import CarDetailsModal from '@/features/Home/components/CarDetailsModal';
+import EditCarModal from '@/features/Home/components/EditCarModal';
+
+const { width } = Dimensions.get('window');
+const CARD_WIDTH = width * 0.75; 
 
 export default function HomeScreen() {
-    const goBack = () => {
-        router.replace('/(auth)/login')
-    }
+    const { getToken } = useAuth();
+    const insets = useSafeAreaInsets();
+    const router = useRouter();
+    const { carros, carsStatus, creditos, bonusDisponivel, isRefreshing, refresh } = useHomeData();
+    const [selectedCar, setSelectedCar] = useState<CarroAPI | null>(null);
+    const [modalVisible, setModalVisible] = useState(false);
+    const [editModalVisible, setEditModalVisible] = useState(false);
 
-    const { width } = Dimensions.get('window');
-    const CARD_WIDTH = width * 0.20;
+    const handleOpenCarDetails = (car: CarroAPI) => {
+        setSelectedCar(car);
+        setModalVisible(true);
+    };
 
-    const TestCard = [
-        { id: '1', title: 'Nissan GT-R', subtitle: 'R35 Nismo', hp: '600hp'},
-        { id: '2', title: 'Card 2', subtitle: 'Promoção imperdível', hp: '600hp'},
-        { id: '3', title: 'Card 3', subtitle: 'Novo lançamento', hp: '600hp'},
-    ]
+    const handleOpenEdit = (car: CarroAPI) => {
+        setModalVisible(false);
+        setTimeout(() => {
+            setEditModalVisible(true);
+        }, 300);
+    };
+
+    const handleDeleteCar = async (carId: number) => {
+        try {
+            const token = await getToken();
+            if (!token) return;
+            setModalVisible(false); 
+            await deleteCarAPI(token, carId);
+            refresh(); 
+        } catch (error) {
+            console.error(error);
+            Alert.alert("Erro", "Não foi possível excluir o veículo.");
+        }
+    };
+
+    const handleSaveEdit = async (id: number, titulo: string, descricao: string, hp: number) => {
+        const token = await getToken();
+        if (!token) throw new Error("Usuário não autenticado");
+        await updateCarAPI(token, id, titulo, descricao, hp);
+        refresh(); 
+    };
+
+    const renderGaragem = () => {
+        if (carsStatus === 'loading') {
+            return <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 20 }} />;
+        }
+
+        if (carsStatus === 'error') {
+            return (
+                <View style={styles.feedbackBox}>
+                    <Text style={styles.emptyText}>Não foi possível carregar sua garagem.</Text>
+                    <Pressable
+                        onPress={refresh}
+                        disabled={isRefreshing}
+                        style={({ pressed }) => [styles.retryButton, pressed && styles.pressed]}
+                        accessibilityRole="button"
+                        accessibilityLabel="Tentar carregar a garagem novamente"
+                    >
+                        <Text style={styles.retryText}>{isRefreshing ? 'Carregando...' : 'Tentar novamente'}</Text>
+                    </Pressable>
+                </View>
+            );
+        }
+
+        if (carros.length === 0) {
+            return <Text style={styles.emptyText}>Você ainda não tem projetos na garagem.</Text>;
+        }
+
+        return (
+            <FlatList 
+                data={carros} 
+                keyExtractor={(item) => item.id.toString()}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.scrollContainer}
+                decelerationRate="fast"
+                snapToInterval={CARD_WIDTH + 16} 
+                renderItem={({ item }) => (
+                    <CardCarUser 
+                        title={item.titulo} 
+                        subtitle={item.descricao} 
+                        hp={`${item.hp} hp`}
+                        imageUrl={imageForMode(item, defaultImageMode(item))}
+                        isAiSimulation={defaultImageMode(item) === 'tunada'}
+                        onPress={() => handleOpenCarDetails(item)}
+                    />
+                )}
+            />
+        );
+    };
 
     return (
         <View style={styles.container}>
-
-            <View style={styles.headerView}>
-                <TouchableOpacity>
-                    <View style={styles.button}>
-                        <Text style={styles.buttonText}>ANALISAR MEU CARRO</Text>
-                    </View>
-                </TouchableOpacity>
+            <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
+                <CreditsBadge creditos={creditos} onPress={() => router.push('/buy-credits')} />
             </View>
 
-            {/* Talvez no futuro se a demandar por performance exigir, trocar pelo FlashList. */}
+            {bonusDisponivel && <PhoneBonusBanner onPress={() => router.push('/verify-phone')} />}
+
             <View style={styles.flatListViewCars}>
-                <Text style={styles.textsPrimary}>Meus carros</Text>
+                <View style={styles.sectionHeader}>
+                    <Text style={styles.sectionTitle}>Meus carros</Text>
+                    <Pressable
+                        onPress={refresh}
+                        disabled={isRefreshing}
+                        hitSlop={8}
+                        style={({ pressed }) => [styles.refreshButton, pressed && styles.pressed]}
+                        accessibilityRole="button"
+                        accessibilityLabel="Atualizar garagem e créditos"
+                        accessibilityState={{ busy: isRefreshing, disabled: isRefreshing }}
+                    >
+                        {isRefreshing ? (
+                            <ActivityIndicator size="small" color={colors.primary} />
+                        ) : (
+                            <RefreshCw size={RFValue(16)} color="#FFF" />
+                        )}
+                    </Pressable>
+                </View>
 
-                <FlatList 
-                    data={TestCard}
-                    renderItem={({ item }) => (
-                        <CardCarUser 
-                        title={item.title} 
-                        subtitle={item.subtitle} 
-                        hp={item.hp} 
-                        onPress={() => {console.log("foi")}} 
-                        />
-                    )}
-                    keyExtractor={(item) => item.id}
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.scrollContainer}
-                    decelerationRate="fast"
-                    snapToInterval={CARD_WIDTH + 16}
-                />
+                {renderGaragem()}
             </View>
 
-            
+            <CarDetailsModal 
+                visible={modalVisible}
+                car={selectedCar}
+                onClose={() => setModalVisible(false)}
+                onEdit={handleOpenEdit}
+                onDelete={handleDeleteCar}
+            />
 
-             <TouchableOpacity onPress={goBack}>
-                    <Text style={{color: '#FFF', margin: 10}}>Ir para tela Login</Text>
-            </TouchableOpacity>
-
-            <View style={styles.flatListViewSuggestions}>
-                <Text style={styles.textsPrimary}>Sugestoes para voce</Text>
-
-                <FlatList
-                    data={TestCard}
-                    renderItem={({item }) => (
-                        <CardSuggestionsUser 
-                           title={item.title}
-                           subtitle={item.subtitle}
-                           onPress={() => {console.log("foi")}}
-                        />
-                    )}
-                    keyExtractor={(item) => item.id}
-                    showsVerticalScrollIndicator={false}
-                    contentContainerStyle={styles.scrollContainer}
-                    decelerationRate={"fast"}
-                    snapToInterval={CARD_WIDTH + 16}
-                   />
-            </View>
+            <EditCarModal
+                visible={editModalVisible}
+                car={selectedCar}
+                onClose={() => setEditModalVisible(false)}
+                onSave={handleSaveEdit}
+            />
         </View>
-    )
+    );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        backgroundColor: '#0F0F0F',
+    },
+    header: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
         paddingHorizontal: 20,
-        backgroundColor: '#000'
-    },
-    headerView: {
-        marginTop: 80,
-        marginHorizontal: 25
-    },
-    button: {
-        height: 60,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: colors.primary,
-        padding: 10,
-        borderRadius: 12
-    },
-    buttonText: {
-        color: '#FFF',
-        fontSize: 16,
-        fontWeight: 'bold'
     },
     textsPrimary: {
-        fontSize: 30,
+        fontSize: RFValue(17),
+        fontFamily: FONTS.Montserrat.regular,
         color: '#FFF',
         alignSelf: 'flex-start',
         marginBottom: 16,
+        paddingHorizontal: 20, 
+    },
+    sectionHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 20,
+        marginBottom: 16,
+    },
+    sectionTitle: {
+        fontSize: RFValue(17),
+        fontFamily: FONTS.Montserrat.regular,
+        color: '#FFF',
+    },
+    refreshButton: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#1E1E1E',
+        borderWidth: 1,
+        borderColor: '#2A2A2A',
+    },
+    pressed: {
+        opacity: 0.7,
+        transform: [{ scale: 0.96 }],
     },
     flatListViewCars: {
-        paddingTop: 30,
+        paddingTop: 24,
+    },
+    feedbackBox: {
+        gap: 12,
+        alignItems: 'flex-start',
+    },
+    emptyText: {
+        color: '#888',
+        paddingHorizontal: 20,
+        fontFamily: FONTS.Montserrat.regular,
+    },
+    retryButton: {
+        marginLeft: 20,
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: colors.primary,
+    },
+    retryText: {
+        color: colors.primary,
+        fontFamily: FONTS.Montserrat.bold,
+        fontSize: RFValue(12),
     },
     scrollContainer: {
-        paddingHorizontal: 16,
+        paddingLeft: 20, 
+        paddingRight: 40,
     },
-    flatListViewSuggestions: {
-        paddingTop: 40,
-    }
-})
+});

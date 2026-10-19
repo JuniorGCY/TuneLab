@@ -1,88 +1,70 @@
 import { useState } from "react";
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
+import { GoogleSigninButton } from "@react-native-google-signin/google-signin";
+import { RFValue } from 'react-native-responsive-fontsize';
+
 import { colors } from "@/constants/colors";
-import { Fonts } from "@/constants/theme";
-import { Link } from "expo-router";
+import { FONTS } from "@/constants/fonts";
+import { useAuth } from '@/contexts/AuthContext';
+import { getErrorCode, getFirebaseErrorMessage } from "@/utils/FirebaseErrors";
 
-import { useAuth } from '../../contexts/AuthContext';
-
+// Só login com Google: sem senha para vazar e sem conta criada com e-mail descartável.
+// Depois de entrar, o _layout redireciona para as abas assim que a API sincroniza o usuário.
 export default function LoginScreen() {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [isLoggingIn, setIsLoggingIn] = useState(false);
-    const { login } = useAuth();
-    
-    const handleLogin = async () => {
-        if (!email || !password) return;
+    const { signInWithGoogle } = useAuth();
+    const [isSigningIn, setIsSigningIn] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
 
+    const handleGoogleSignIn = async () => {
+        setErrorMessage('');
+        setIsSigningIn(true);
         try {
-            setIsLoggingIn(true);
-            await login(email, password);
-        } catch (error: any) {
-            console.log('Erro ao logar:', error.message);
+            await signInWithGoogle();
+        } catch (error) {
+            console.error('Erro no login com Google:', error);
+            setErrorMessage(getFirebaseErrorMessage(getErrorCode(error)));
         } finally {
-            setIsLoggingIn(false);
+            setIsSigningIn(false);
         }
-    }
+    };
 
     return (
         <View style={styles.container}>
-            <View style={{justifyContent: 'center', alignItems: 'center'}}>
-                <Text style={styles.title}>TuneLab</Text>
-                <Text style={styles.subTitle}>Bem-vindo de volta</Text>
+            <View style={styles.header}>
+                <Text style={styles.title} accessibilityRole="header">TuneLab</Text>
+                <Text style={styles.subTitle}>Descubra o potencial do seu carro</Text>
             </View>
 
             <View style={styles.mainCard}>
-                <View>
-                    <TextInput
-                        style={styles.inputfield}
-                        placeholder="Digite seu email"
-                        placeholderTextColor="#666"
-                        value={email}
-                        onChangeText={setEmail}
-                        keyboardType="email-address"
-                        autoCapitalize="none"
+                <GoogleSigninButton
+                    size={GoogleSigninButton.Size.Wide}
+                    color={GoogleSigninButton.Color.Dark}
+                    onPress={handleGoogleSignIn}
+                    disabled={isSigningIn}
+                    style={styles.googleButton}
+                    accessibilityLabel="Entrar com Google"
+                />
+
+                {isSigningIn && (
+                    <ActivityIndicator
+                        color={colors.primary}
+                        style={styles.loading}
+                        accessibilityLabel="Entrando"
                     />
-                </View>
+                )}
 
-                <View>
-                   <TextInput
-                       style={styles.inputfield}
-                       placeholder="Digite sua senha"
-                       placeholderTextColor="#666"
-                       value={password}
-                       onChangeText={setPassword}
-                       secureTextEntry
-                    /> 
-                </View>
-
-                <Text style={{color: '#FFF', alignSelf: 'flex-end', margin: 10}}>Esqueceu a senha?</Text>
-
-                <View>
-                    <TouchableOpacity 
-                        style={styles.button} 
-                        onPress={handleLogin}
-                        disabled={isLoggingIn}
-                    >
-                        {isLoggingIn ? (
-                            <ActivityIndicator color="#FFF" />
-                        ) : (
-                            <Text style={{color: '#FFF', textAlign: 'center'}}>Entrar</Text>
-                        )}
-                    </TouchableOpacity>
-                </View>
+                {errorMessage ? (
+                    <Text style={styles.errorText} accessibilityRole="alert" accessibilityLiveRegion="polite">
+                        {errorMessage}
+                    </Text>
+                ) : null}
             </View>
 
-            <View style={{flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}}>
-                <Text style={{color: '#FFF', margin: 10}}>Não tem conta?</Text>
-                <Link href="/register" asChild>
-                    <TouchableOpacity>
-                        <Text style={{color: '#FFF', margin: 10, textDecorationLine: 'underline'}}>Crie uma!</Text>
-                    </TouchableOpacity>
-                </Link>
-            </View>
+            <Text style={styles.legalText}>
+                Ao entrar, você concorda com os Termos de Uso e a Política de Privacidade do TuneLab.
+            </Text>
         </View>
-    )
+    );
 }
 
 const styles = StyleSheet.create({
@@ -90,42 +72,55 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#0F0F0F',
         justifyContent: 'center',
-        alignItems: 'center'
+        alignItems: 'center',
+        paddingHorizontal: 20,
+    },
+    header: {
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     title: {
-        fontSize: 30,
+        fontSize: RFValue(35),
         color: colors.primary,
-        fontFamily: Fonts.serif
+        fontFamily: FONTS.Montserrat.extraBold,
+        marginBottom: 5
     },
     subTitle: {
-        fontSize: 25,
+        fontSize: RFValue(14),
         color: '#FFF',
-        fontFamily: Fonts.sans
+        fontFamily: FONTS.Montserrat.medium,
+        textAlign: 'center',
     },
     mainCard: {
         backgroundColor: '#1C1C1E',
-        justifyContent: 'center', 
         alignItems: 'center',
-        width: '80%',
-        margin: 20,
-        padding: 10,
+        width: '100%',
+        maxWidth: 360,
+        marginVertical: 24,
+        paddingVertical: 24,
+        paddingHorizontal: 16,
         borderRadius: 12,
     },
-    inputfield: {
-        width: 250,
-        marginVertical: 10,
-        padding: 10,
-        color: '#fff',
-        borderWidth: 0.5,
-        borderColor: colors.border,
-        borderRadius: 12,
-        backgroundColor: '#0F0F0F',
+    googleButton: {
+        width: '100%',
+        maxWidth: 312,
+        height: 48,
     },
-    button: {
-        width: 250,
-        padding: 15, 
-        marginVertical: 10,
-        borderRadius: 12, 
-        backgroundColor: colors.primary, 
-    }
-})
+    loading: {
+        marginTop: 16,
+    },
+    errorText: {
+        marginTop: 16,
+        color: '#ff4d4d',
+        fontSize: RFValue(11),
+        textAlign: 'center',
+        fontFamily: FONTS.Montserrat.regular
+    },
+    legalText: {
+        maxWidth: 320,
+        color: '#888',
+        fontSize: RFValue(9),
+        textAlign: 'center',
+        fontFamily: FONTS.Montserrat.regular,
+    },
+});
